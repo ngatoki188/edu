@@ -38,6 +38,10 @@
                         <span class="nav-icon">💳</span>
                         <span class="nav-text">Quản lý khoản nợ</span>
                     </li>
+                    <li class="nav-item" data-module="invoice-management">
+                        <span class="nav-icon">🧾</span>
+                        <span class="nav-text">Quản lý Hóa đơn</span>
+                    </li>
                 </ul>
             </nav>
         </aside>
@@ -425,6 +429,7 @@
                                         <th>Đợt thanh toán</th>
                                         <th>Số tiền cần thanh toán</th>
                                         <th>Số tiền nợ</th>
+                                        <th>Trạng thái</th>
                                         <th>Hành động</th>
                                     </tr>
                                 </thead>
@@ -436,11 +441,101 @@
                                         <td>First Semester Payment</td>
                                         <td>1,500,000 MMK</td>
                                         <td><span class="badge badge-danger">500,000 MMK</span></td>
+                                        <td><span class="badge badge-danger">Đã hết hạn</span></td>
                                         <td class="action-cell">
-                                            <button class="btn-icon btn-view" title="Xem">👁️</button>
-                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
-                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
-                                            <button class="btn-icon btn-active" title="Active">✓</button>
+                                            <button class="btn-icon btn-view" title="Xem chi tiết">👁️</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>STU002</td>
+                                        <td>Trần Thị B</td>
+                                        <td>First Semester Payment</td>
+                                        <td>1,500,000 MMK</td>
+                                        <td><span class="badge badge-danger">300,000 MMK</span></td>
+                                        <td><span class="badge badge-success">Chưa hết hạn</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết">👁️</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>STU003</td>
+                                        <td>Lê Văn C</td>
+                                        <td>Second Semester Payment</td>
+                                        <td>1,200,000 MMK</td>
+                                        <td><span class="badge badge-danger">200,000 MMK</span></td>
+                                        <td><span class="badge badge-success">Chưa hết hạn</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết">👁️</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Management Module -->
+                <div class="module-content" id="invoice-management-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Quản lý Hóa đơn</h3>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã giao dịch</th>
+                                        <th>Mã học sinh</th>
+                                        <th>Tên học sinh</th>
+                                        <th>Kì thanh toán</th>
+                                        <th>Số tiền phải thanh toán</th>
+                                        <th>Số tiền đã thanh toán</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoice-table-body">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>INV001</td>
+                                        <td>STU001</td>
+                                        <td>Nguyễn Văn A</td>
+                                        <td>First Semester Payment</td>
+                                        <td>1,500,000 MMK</td>
+                                        <td>1,000,000 MMK</td>
+                                        <td><span class="badge badge-warning">Chờ xác nhận</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết">👁️</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>INV002</td>
+                                        <td>STU002</td>
+                                        <td>Trần Thị B</td>
+                                        <td>First Semester Payment</td>
+                                        <td>1,500,000 MMK</td>
+                                        <td>1,500,000 MMK</td>
+                                        <td><span class="badge badge-success">Đã xác nhận</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết">👁️</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>INV003</td>
+                                        <td>STU003</td>
+                                        <td>Lê Văn C</td>
+                                        <td>Second Semester Payment</td>
+                                        <td>1,200,000 MMK</td>
+                                        <td>800,000 MMK</td>
+                                        <td><span class="badge badge-warning">Chờ xác nhận</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết">👁️</button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -804,8 +899,8 @@
                     </div>
 
                     <div class="detail-row">
-                        <div class="detail-label">Trạng thái:</div>
-                        <div class="detail-value">
+                        <div class="detail-label">Trạng thái hạn thanh toán:</div>
+                        <div class="detail-value" id="debt-detail-expiry-status">
                             <span class="badge badge-warning">Đang nợ</span>
                         </div>
                     </div>
@@ -813,6 +908,182 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('debt-detail-modal')">Đóng</button>
                     <button type="button" class="btn btn-primary" onclick="alert('Chức năng thanh toán nợ')">Thanh toán nợ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Detail Modal -->
+    <div class="modal" id="invoice-detail-modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Chi tiết Hóa đơn</h3>
+                <button class="modal-close" onclick="closeModal('invoice-detail-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-view">
+                    <div class="detail-section">
+                        <h4 class="detail-section-title">Thông tin hóa đơn</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Mã giao dịch:</div>
+                            <div class="detail-value highlight" id="invoice-detail-code">INV001</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Ngày tạo:</div>
+                            <div class="detail-value" id="invoice-detail-date">15/01/2024</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Trạng thái:</div>
+                            <div class="detail-value" id="invoice-detail-status">
+                                <span class="badge badge-warning">Chờ xác nhận</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 class="detail-section-title">Thông tin học sinh</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Mã học sinh:</div>
+                            <div class="detail-value" id="invoice-detail-student-code">STU001</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Tên học sinh:</div>
+                            <div class="detail-value" id="invoice-detail-student-name">Nguyễn Văn A</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Lớp:</div>
+                            <div class="detail-value" id="invoice-detail-class">10A1</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 class="detail-section-title">Thông tin kì thanh toán</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Kì thanh toán:</div>
+                            <div class="detail-value" id="invoice-detail-period">First Semester Payment</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Mã đợt thanh toán:</div>
+                            <div class="detail-value" id="invoice-detail-period-code">PP001</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Ngày bắt đầu:</div>
+                            <div class="detail-value" id="invoice-detail-period-start">01/01/2024</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Ngày kết thúc:</div>
+                            <div class="detail-value" id="invoice-detail-period-end">31/03/2024</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 class="detail-section-title">Chi tiết các khoản phí</h4>
+                        <div class="detail-table-container">
+                            <table class="detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Khoản phí</th>
+                                        <th>Số tiền</th>
+                                        <th>Đã thanh toán</th>
+                                        <th>Còn lại</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoice-detail-items">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Tuition Fee</td>
+                                        <td>500,000 MMK</td>
+                                        <td>300,000 MMK</td>
+                                        <td><span class="badge badge-danger">200,000 MMK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Library Fee</td>
+                                        <td>50,000 MMK</td>
+                                        <td>50,000 MMK</td>
+                                        <td><span class="badge badge-success">0 MMK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Lab Fee</td>
+                                        <td>100,000 MMK</td>
+                                        <td>100,000 MMK</td>
+                                        <td><span class="badge badge-success">0 MMK</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>Sports Fee</td>
+                                        <td>75,000 MMK</td>
+                                        <td>50,000 MMK</td>
+                                        <td><span class="badge badge-danger">25,000 MMK</span></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr class="detail-table-total">
+                                        <td colspan="2"><strong>Tổng cộng</strong></td>
+                                        <td><strong id="invoice-detail-total-amount">725,000 MMK</strong></td>
+                                        <td><strong id="invoice-detail-paid-amount">500,000 MMK</strong></td>
+                                        <td><strong><span class="badge badge-danger" id="invoice-detail-remaining">225,000 MMK</span></strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 class="detail-section-title">Tổng hợp thanh toán</h4>
+                        <div class="detail-row">
+                            <div class="detail-label">Số tiền phải thanh toán:</div>
+                            <div class="detail-value highlight" id="invoice-detail-required-amount">1,500,000 MMK</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Số tiền đã thanh toán:</div>
+                            <div class="detail-value highlight success" id="invoice-detail-total-paid">1,000,000 MMK</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Số tiền còn lại:</div>
+                            <div class="detail-value highlight danger" id="invoice-detail-total-remaining">500,000 MMK</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Tỷ lệ thanh toán:</div>
+                            <div class="detail-value" id="invoice-detail-payment-percentage">66.67%</div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 class="detail-section-title">Lịch sử thanh toán</h4>
+                        <div class="detail-table-container">
+                            <table class="detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Ngày thanh toán</th>
+                                        <th>Số tiền</th>
+                                        <th>Phương thức</th>
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoice-detail-payment-history">
+                                    <tr>
+                                        <td>10/01/2024</td>
+                                        <td>500,000 MMK</td>
+                                        <td>Chuyển khoản</td>
+                                        <td>Thanh toán lần 1</td>
+                                    </tr>
+                                    <tr>
+                                        <td>15/01/2024</td>
+                                        <td>500,000 MMK</td>
+                                        <td>Tiền mặt</td>
+                                        <td>Thanh toán lần 2</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('invoice-detail-modal')">Đóng</button>
+                    <button type="button" class="btn btn-primary" id="invoice-confirm-btn" onclick="confirmInvoice()">Xác nhận hóa đơn</button>
                 </div>
             </div>
         </div>

@@ -53,7 +53,8 @@ function updatePageTitle(moduleName) {
         'payment-period': 'Quản lý Đợt thanh toán',
         'payment-config': 'Cấu hình Đợt thanh toán',
         'student-fee-config': 'Cấu hình khoản phí cho học sinh',
-        'debt-management': 'Quản lý khoản nợ'
+        'debt-management': 'Quản lý khoản nợ',
+        'invoice-management': 'Quản lý Hóa đơn'
     };
     
     if (pageTitle && titles[moduleName]) {
@@ -267,6 +268,7 @@ function getCurrentModule() {
         if (moduleId.includes('payment-config')) return 'payment-config';
         if (moduleId.includes('student-fee-config')) return 'student-fee-config';
         if (moduleId.includes('debt-management')) return 'debt-management';
+        if (moduleId.includes('invoice-management')) return 'invoice-management';
     }
     return null;
 }
@@ -290,6 +292,9 @@ function showDetailModal(module, row) {
             break;
         case 'debt-management':
             showDebtDetail(cells);
+            break;
+        case 'invoice-management':
+            showInvoiceDetail(cells);
             break;
     }
 }
@@ -364,6 +369,7 @@ function showDebtDetail(cells) {
     document.getElementById('debt-detail-end-date').textContent = '31/03/2024';
     document.getElementById('debt-detail-total-amount').textContent = cells[4].textContent;
     
+    // Note: cells[5] is now "Số tiền nợ", cells[6] is "Trạng thái", cells[7] is "Hành động"
     const debtText = cells[5].textContent;
     const debtAmount = parseInt(debtText.replace(/[^\d]/g, '')) || 0;
     const totalAmount = parseInt(cells[4].textContent.replace(/[^\d]/g, '')) || 0;
@@ -375,5 +381,117 @@ function showDebtDetail(cells) {
     const paymentRate = totalAmount > 0 ? ((paidAmount / totalAmount) * 100).toFixed(2) : '0.00';
     document.getElementById('debt-detail-payment-rate').textContent = paymentRate + '%';
     
+    // Get status from table (cells[6] is the status column)
+    const statusText = cells[6].textContent.trim();
+    const statusElement = document.getElementById('debt-detail-expiry-status');
+    if (statusText.includes('hết hạn') || statusText.includes('Đã')) {
+        statusElement.innerHTML = '<span class="badge badge-danger">Đã hết hạn</span>';
+    } else {
+        statusElement.innerHTML = '<span class="badge badge-success">Chưa hết hạn</span>';
+    }
+    
     showModal('debt-detail-modal');
+}
+
+// Invoice Detail
+function showInvoiceDetail(cells) {
+    // Get data from table row
+    const invoiceCode = cells[1].textContent.trim();
+    const studentCode = cells[2].textContent.trim();
+    const studentName = cells[3].textContent.trim();
+    const period = cells[4].textContent.trim();
+    const requiredAmount = cells[5].textContent.trim();
+    const paidAmount = cells[6].textContent.trim();
+    const status = cells[7].textContent.trim();
+    
+    // Set basic information
+    document.getElementById('invoice-detail-code').textContent = invoiceCode;
+    document.getElementById('invoice-detail-date').textContent = new Date().toLocaleDateString('vi-VN');
+    document.getElementById('invoice-detail-student-code').textContent = studentCode;
+    document.getElementById('invoice-detail-student-name').textContent = studentName;
+    document.getElementById('invoice-detail-class').textContent = '10A1'; // Mock data
+    document.getElementById('invoice-detail-period').textContent = period;
+    document.getElementById('invoice-detail-period-code').textContent = 'PP001';
+    document.getElementById('invoice-detail-period-start').textContent = '01/01/2024';
+    document.getElementById('invoice-detail-period-end').textContent = '31/03/2024';
+    
+    // Set status
+    const statusElement = document.getElementById('invoice-detail-status');
+    if (status.includes('xác nhận') || status.includes('Đã')) {
+        statusElement.innerHTML = '<span class="badge badge-success">Đã xác nhận</span>';
+        // Hide confirm button if already confirmed
+        const confirmBtn = document.getElementById('invoice-confirm-btn');
+        if (confirmBtn) confirmBtn.style.display = 'none';
+    } else {
+        statusElement.innerHTML = '<span class="badge badge-warning">Chờ xác nhận</span>';
+        const confirmBtn = document.getElementById('invoice-confirm-btn');
+        if (confirmBtn) confirmBtn.style.display = 'inline-flex';
+    }
+    
+    // Calculate amounts
+    const requiredAmountNum = parseInt(requiredAmount.replace(/[^\d]/g, '')) || 0;
+    const paidAmountNum = parseInt(paidAmount.replace(/[^\d]/g, '')) || 0;
+    const remainingAmount = requiredAmountNum - paidAmountNum;
+    const paymentPercentage = requiredAmountNum > 0 ? ((paidAmountNum / requiredAmountNum) * 100).toFixed(2) : '0.00';
+    
+    // Set amounts
+    document.getElementById('invoice-detail-required-amount').textContent = requiredAmount;
+    document.getElementById('invoice-detail-total-paid').textContent = paidAmount;
+    document.getElementById('invoice-detail-total-remaining').textContent = remainingAmount.toLocaleString('vi-VN') + ' MMK';
+    document.getElementById('invoice-detail-payment-percentage').textContent = paymentPercentage + '%';
+    
+    // Mock detail items - in real app, this would come from API
+    const detailItems = [
+        { name: 'Tuition Fee', amount: 500000, paid: 300000 },
+        { name: 'Library Fee', amount: 50000, paid: 50000 },
+        { name: 'Lab Fee', amount: 100000, paid: 100000 },
+        { name: 'Sports Fee', amount: 75000, paid: 50000 }
+    ];
+    
+    const itemsTableBody = document.getElementById('invoice-detail-items');
+    itemsTableBody.innerHTML = '';
+    let totalAmount = 0;
+    let totalPaid = 0;
+    
+    detailItems.forEach((item, index) => {
+        const remaining = item.amount - item.paid;
+        totalAmount += item.amount;
+        totalPaid += item.paid;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${item.name}</td>
+            <td>${item.amount.toLocaleString('vi-VN')} MMK</td>
+            <td>${item.paid.toLocaleString('vi-VN')} MMK</td>
+            <td>${remaining > 0 ? `<span class="badge badge-danger">${remaining.toLocaleString('vi-VN')} MMK</span>` : '<span class="badge badge-success">0 MMK</span>'}</td>
+        `;
+        itemsTableBody.appendChild(row);
+    });
+    
+    // Update totals
+    document.getElementById('invoice-detail-total-amount').textContent = totalAmount.toLocaleString('vi-VN') + ' MMK';
+    document.getElementById('invoice-detail-paid-amount').textContent = totalPaid.toLocaleString('vi-VN') + ' MMK';
+    const totalRemaining = totalAmount - totalPaid;
+    document.getElementById('invoice-detail-remaining').textContent = totalRemaining.toLocaleString('vi-VN') + ' MMK';
+    
+    showModal('invoice-detail-modal');
+}
+
+// Confirm Invoice
+function confirmInvoice() {
+    if (confirm('Bạn có chắc chắn muốn xác nhận hóa đơn này?')) {
+        // Update status in modal
+        const statusElement = document.getElementById('invoice-detail-status');
+        statusElement.innerHTML = '<span class="badge badge-success">Đã xác nhận</span>';
+        
+        // Hide confirm button
+        const confirmBtn = document.getElementById('invoice-confirm-btn');
+        if (confirmBtn) confirmBtn.style.display = 'none';
+        
+        alert('Đã xác nhận hóa đơn thành công!');
+        
+        // In real app, you would update the database here
+        // Then refresh the table to show updated status
+    }
 }

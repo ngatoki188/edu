@@ -42,6 +42,10 @@
                         <span class="nav-icon">🧾</span>
                         <span class="nav-text">Quản lý Hóa đơn</span>
                     </li>
+                    <li class="nav-item" data-module="grade">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Grade</span>
+                    </li>
                 </ul>
             </nav>
         </aside>
@@ -540,6 +544,132 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade Module -->
+                <div class="module-content" id="grade-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Tạo đầu điểm</h3>
+                            <button class="btn btn-primary" onclick="showAddGradePointForm()">
+                                <span>+</span> Thêm đầu điểm mới
+                            </button>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã đầu điểm</th>
+                                        <th>Môn học</th>
+                                        <th>Tên đầu điểm</th>
+                                        <th>Tỷ trọng</th>
+                                        <th>Thang điểm tối đa</th>
+                                        <th>Ghi chú</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="grade-point-table-body">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>GP001</td>
+                                        <td>Toán</td>
+                                        <td>Kiểm tra giữa kỳ</td>
+                                        <td>30%</td>
+                                        <td>10</td>
+                                        <td>Điểm kiểm tra giữa kỳ môn Toán</td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
+                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
+                                            <button class="btn-icon btn-active" title="Active">✓</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>GP002</td>
+                                        <td>Văn</td>
+                                        <td>Kiểm tra cuối kỳ</td>
+                                        <td>40%</td>
+                                        <td>10</td>
+                                        <td>Điểm kiểm tra cuối kỳ môn Văn</td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
+                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
+                                            <button class="btn-icon btn-active" title="Active">✓</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>GP003</td>
+                                        <td>Anh</td>
+                                        <td>Bài tập về nhà</td>
+                                        <td>20%</td>
+                                        <td>10</td>
+                                        <td>Điểm bài tập về nhà môn Anh</td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
+                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
+                                            <button class="btn-icon btn-active" title="Active">✓</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Grade Point Form Modal -->
+                    <div class="modal" id="add-grade-point-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Thêm đầu điểm mới</h3>
+                                <button class="modal-close" onclick="closeModal('add-grade-point-modal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="grade-point-form">
+                                    <div class="form-group">
+                                        <label>Mã đầu điểm <span class="required">*</span></label>
+                                        <input type="text" class="form-control" required placeholder="VD: GP001">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Môn học <span class="required">*</span></label>
+                                        <select class="form-control" required>
+                                            <option value="">-- Chọn môn học --</option>
+                                            <option value="math">Toán</option>
+                                            <option value="literature">Văn</option>
+                                            <option value="english">Anh</option>
+                                            <option value="physics">Lý</option>
+                                            <option value="chemistry">Hóa</option>
+                                            <option value="biology">Sinh</option>
+                                            <option value="history">Sử</option>
+                                            <option value="geography">Địa</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tên đầu điểm <span class="required">*</span></label>
+                                        <input type="text" class="form-control" required placeholder="VD: Kiểm tra giữa kỳ">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Tỷ trọng (%) <span class="required">*</span></label>
+                                        <input type="number" class="form-control" required min="0" max="100" step="0.1" placeholder="VD: 30">
+                                        <small class="form-text">Nhập tỷ trọng từ 0 đến 100%</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Thang điểm tối đa <span class="required">*</span></label>
+                                        <input type="number" class="form-control" required min="1" step="0.1" placeholder="VD: 10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea class="form-control" rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-secondary" onclick="closeModal('add-grade-point-modal')">Hủy</button>
+                                        <button type="submit" class="btn btn-primary">Lưu</button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

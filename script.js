@@ -54,7 +54,8 @@ function updatePageTitle(moduleName) {
         'payment-config': 'Cấu hình Đợt thanh toán',
         'student-fee-config': 'Cấu hình khoản phí cho học sinh',
         'debt-management': 'Quản lý khoản nợ',
-        'invoice-management': 'Quản lý Hóa đơn'
+        'invoice-management': 'Quản lý Hóa đơn',
+        'grade': 'Grade - Tạo đầu điểm'
     };
     
     if (pageTitle && titles[moduleName]) {
@@ -105,6 +106,11 @@ function showAddPaymentConfigForm() {
 // Student Fee Config functions
 function showAddStudentFeeConfigForm() {
     showModal('add-student-fee-config-modal');
+}
+
+// Grade Point functions
+function showAddGradePointForm() {
+    showModal('add-grade-point-modal');
 }
 
 // Load students based on selected class
@@ -235,6 +241,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('student-select').innerHTML = '<option value="">-- Chọn học sinh --</option>';
             document.getElementById('fee-items-checkbox').innerHTML = '';
             document.getElementById('discount-items-checkbox').innerHTML = '';
+        });
+    }
+
+    // Grade Point form
+    const gradePointForm = document.getElementById('grade-point-form');
+    if (gradePointForm) {
+        gradePointForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Đã lưu thông tin Đầu điểm thành công!');
+            closeModal('add-grade-point-modal');
+            gradePointForm.reset();
         });
     }
 });

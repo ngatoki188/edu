@@ -515,6 +515,13 @@ select.form-control {
     cursor: pointer;
 }
 
+.form-text {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 12px;
+    color: var(--text-medium);
+}
+
 .checkbox-group {
     display: flex;
     flex-direction: column;

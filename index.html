@@ -44,7 +44,15 @@
                     </li>
                     <li class="nav-item" data-module="grade">
                         <span class="nav-icon">📊</span>
-                        <span class="nav-text">Grade</span>
+                        <span class="nav-text">Tạo đầu điểm</span>
+                    </li>
+                    <li class="nav-item" data-module="grade-input">
+                        <span class="nav-icon">✏️</span>
+                        <span class="nav-text">Nhập điểm</span>
+                    </li>
+                    <li class="nav-item" data-module="grade-approval">
+                        <span class="nav-icon">✅</span>
+                        <span class="nav-text">Duyệt điểm</span>
                     </li>
                 </ul>
             </nav>
@@ -548,7 +556,7 @@
                     </div>
                 </div>
 
-                <!-- Grade Module -->
+                <!-- Grade Module - Tạo đầu điểm -->
                 <div class="module-content" id="grade-module">
                     <div class="content-card">
                         <div class="card-header">
@@ -557,7 +565,7 @@
                                 <span>+</span> Thêm đầu điểm mới
                             </button>
                         </div>
-                        
+                    
                         <div class="table-container">
                             <table class="data-table">
                                 <thead>
@@ -581,34 +589,6 @@
                                         <td>30%</td>
                                         <td>10</td>
                                         <td>Điểm kiểm tra giữa kỳ môn Toán</td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
-                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
-                                            <button class="btn-icon btn-active" title="Active">✓</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>GP002</td>
-                                        <td>Văn</td>
-                                        <td>Kiểm tra cuối kỳ</td>
-                                        <td>40%</td>
-                                        <td>10</td>
-                                        <td>Điểm kiểm tra cuối kỳ môn Văn</td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
-                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
-                                            <button class="btn-icon btn-active" title="Active">✓</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>GP003</td>
-                                        <td>Anh</td>
-                                        <td>Bài tập về nhà</td>
-                                        <td>20%</td>
-                                        <td>10</td>
-                                        <td>Điểm bài tập về nhà môn Anh</td>
                                         <td class="action-cell">
                                             <button class="btn-icon btn-edit" title="Sửa">✏️</button>
                                             <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
@@ -669,6 +649,246 @@
                                         <button type="submit" class="btn btn-primary">Lưu</button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade Input Module -->
+                <div class="module-content" id="grade-input-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Nhập điểm</h3>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select class="form-control" id="grade-semester-filter" style="width: 180px;" onchange="onSemesterChange()">
+                                    <option value="">-- Chọn kỳ học --</option>
+                                    <option value="semester1">Học kỳ 1</option>
+                                    <option value="semester2">Học kỳ 2</option>
+                                    <option value="semester3">Học kỳ 3</option>
+                                </select>
+                                <select class="form-control" id="grade-subject-filter" style="width: 200px;" onchange="onSubjectChange()">
+                                    <option value="">-- Chọn môn học --</option>
+                                    <option value="math">Toán</option>
+                                    <option value="literature">Văn</option>
+                                    <option value="english">Anh</option>
+                                    <option value="physics">Lý</option>
+                                    <option value="chemistry">Hóa</option>
+                                    <option value="biology">Sinh</option>
+                                    <option value="history">Sử</option>
+                                    <option value="geography">Địa</option>
+                                </select>
+                                <select class="form-control" id="grade-class-filter" style="width: 180px;" onchange="onClassChange()">
+                                    <option value="">-- Chọn lớp --</option>
+                                    <option value="10A1">10A1</option>
+                                    <option value="10A2">10A2</option>
+                                    <option value="11A1">11A1</option>
+                                    <option value="11A2">11A2</option>
+                                    <option value="12A1">12A1</option>
+                                    <option value="12A2">12A2</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="saveGrades()">
+                                    <span>💾</span> Lưu điểm
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="grade-input-table">
+                                <thead>
+                                    <tr id="grade-input-table-header">
+                                        <th>#</th>
+                                        <th>Mã SV</th>
+                                        <th>Họ và tên</th>
+                                        <!-- Dynamic columns will be inserted here -->
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                    <tbody id="grade-input-table-body">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                                                Vui lòng chọn kỳ học, môn học và lớp ở trên để hiển thị bảng nhập điểm
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade Approval Module -->
+                <div class="module-content" id="grade-approval-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Duyệt điểm cho Admin</h3>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select class="form-control" id="approval-status-filter" style="width: 180px;" onchange="filterApprovalList()">
+                                    <option value="">-- Tất cả trạng thái --</option>
+                                    <option value="pending">Chờ duyệt</option>
+                                    <option value="approved">Đã duyệt</option>
+                                    <option value="rejected">Đã từ chối</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Kỳ học</th>
+                                        <th>Môn học</th>
+                                        <th>Lớp</th>
+                                        <th>Giáo viên</th>
+                                        <th>Ngày nhập</th>
+                                        <th>Số học sinh</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="grade-approval-table-body">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>Học kỳ 1</td>
+                                        <td>Toán</td>
+                                        <td>10A1</td>
+                                        <td>Nguyễn Văn A</td>
+                                        <td>15/01/2024</td>
+                                        <td>25</td>
+                                        <td><span class="badge badge-warning">Chờ duyệt</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showApprovalDetail(1)">👁️</button>
+                                            <button class="btn-icon btn-edit" style="background-color: rgba(40, 199, 111, 0.1);" title="Duyệt" onclick="approveGrade(1)">✓</button>
+                                            <button class="btn-icon btn-delete" title="Từ chối" onclick="rejectGrade(1)">✗</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>Học kỳ 1</td>
+                                        <td>Văn</td>
+                                        <td>10A2</td>
+                                        <td>Trần Thị B</td>
+                                        <td>16/01/2024</td>
+                                        <td>30</td>
+                                        <td><span class="badge badge-success">Đã duyệt</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showApprovalDetail(2)">👁️</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>Học kỳ 1</td>
+                                        <td>Anh</td>
+                                        <td>11A1</td>
+                                        <td>Lê Văn C</td>
+                                        <td>17/01/2024</td>
+                                        <td>28</td>
+                                        <td><span class="badge badge-warning">Chờ duyệt</span></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showApprovalDetail(3)">👁️</button>
+                                            <button class="btn-icon btn-edit" style="background-color: rgba(40, 199, 111, 0.1);" title="Duyệt" onclick="approveGrade(3)">✓</button>
+                                            <button class="btn-icon btn-delete" title="Từ chối" onclick="rejectGrade(3)">✗</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Approval Detail Modal -->
+                    <div class="modal" id="approval-detail-modal">
+                        <div class="modal-content modal-large">
+                            <div class="modal-header">
+                                <h3>Chi tiết điểm cần duyệt</h3>
+                                <button class="modal-close" onclick="closeModal('approval-detail-modal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="detail-view">
+                                    <div class="detail-section">
+                                        <h4 class="detail-section-title">Thông tin chung</h4>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Kỳ học:</div>
+                                            <div class="detail-value" id="approval-detail-semester">Học kỳ 1</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Môn học:</div>
+                                            <div class="detail-value" id="approval-detail-subject">Toán</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Lớp:</div>
+                                            <div class="detail-value" id="approval-detail-class">10A1</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Giáo viên:</div>
+                                            <div class="detail-value" id="approval-detail-teacher">Nguyễn Văn A</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Ngày nhập:</div>
+                                            <div class="detail-value" id="approval-detail-date">15/01/2024</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Số học sinh:</div>
+                                            <div class="detail-value" id="approval-detail-student-count">25</div>
+                                        </div>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Trạng thái:</div>
+                                            <div class="detail-value" id="approval-detail-status">
+                                                <span class="badge badge-warning">Chờ duyệt</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4 class="detail-section-title">Danh sách điểm</h4>
+                                        <div class="detail-table-container">
+                                            <table class="detail-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>STT</th>
+                                                        <th>Mã SV</th>
+                                                        <th>Họ và tên</th>
+                                                        <th>Kiểm tra giữa kỳ (30%)</th>
+                                                        <th>Kiểm tra cuối kỳ (40%)</th>
+                                                        <th>Bài tập (20%)</th>
+                                                        <th>Điểm TB</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="approval-detail-grades">
+                                                    <tr>
+                                                        <td>1</td>
+                                                        <td>3120410024</td>
+                                                        <td>Trương Hồ An</td>
+                                                        <td>8.5</td>
+                                                        <td>9.0</td>
+                                                        <td>7.5</td>
+                                                        <td><strong>8.4</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>2</td>
+                                                        <td>3121560010</td>
+                                                        <td>Nguyễn Quốc Anh</td>
+                                                        <td>7.0</td>
+                                                        <td>8.0</td>
+                                                        <td>8.5</td>
+                                                        <td><strong>7.7</strong></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4 class="detail-section-title">Ghi chú</h4>
+                                        <div class="detail-row">
+                                            <div class="detail-label">Ghi chú của giáo viên:</div>
+                                            <div class="detail-value" id="approval-detail-note">Đã nhập đầy đủ điểm cho tất cả học sinh trong lớp</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary" onclick="closeModal('approval-detail-modal')">Đóng</button>
+                                    <button type="button" class="btn btn-danger" id="approval-reject-btn" onclick="rejectGradeFromDetail()">Từ chối</button>
+                                    <button type="button" class="btn btn-primary" id="approval-approve-btn" onclick="approveGradeFromDetail()">Duyệt</button>
+                                </div>
                             </div>
                         </div>
                     </div>

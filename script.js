@@ -60,6 +60,25 @@ function initNavigation() {
                     checkAndLoadTable();
                 }, 100);
             }
+            
+            // Special handling for student-fee-config module
+            if (moduleName === 'student-fee-config') {
+                setTimeout(function() {
+                    // Initialize dropdown states
+                    const semesterFilter = document.getElementById('student-fee-semester-filter');
+                    const periodFilter = document.getElementById('student-fee-period-filter');
+                    const classFilter = document.getElementById('student-fee-class-filter');
+                    
+                    if (periodFilter) {
+                        periodFilter.disabled = !semesterFilter || !semesterFilter.value;
+                    }
+                    if (classFilter) {
+                        classFilter.disabled = !semesterFilter || !semesterFilter.value || !periodFilter || !periodFilter.value;
+                    }
+                    
+                    checkAndLoadStudentFeeTable();
+                }, 100);
+            }
         });
     });
 }
@@ -622,6 +641,289 @@ function filterApprovalList() {
     });
 }
 
+// Student Fee Config Functions
+// Mock payment periods data
+const paymentPeriodsData = {
+    'semester1': [
+        { code: 'PP001', name: 'First Semester Payment', nameMy: 'ပထမနှစ်ဝက် ငွေပေးချေမှု', feeItems: ['FEE001', 'FEE002'] },
+        { code: 'PP002', name: 'Mid Semester Payment', nameMy: 'အလယ်နှစ်ဝက် ငွေပေးချေမှု', feeItems: ['FEE001'] }
+    ],
+    'semester2': [
+        { code: 'PP003', name: 'Second Semester Payment', nameMy: 'ဒုတိယနှစ်ဝက် ငွေပေးချေမှု', feeItems: ['FEE001', 'FEE002', 'FEE003'] }
+    ],
+    'semester3': [
+        { code: 'PP004', name: 'Third Semester Payment', nameMy: 'တတိယနှစ်ဝက် ငွေပေးချေမှု', feeItems: ['FEE001'] }
+    ]
+};
+
+// Mock fee items data
+const feeItemsData = {
+    'FEE001': { code: 'FEE001', nameEn: 'Tuition Fee', nameMy: 'ကျောင်းလချေး' },
+    'FEE002': { code: 'FEE002', nameEn: 'Library Fee', nameMy: 'စာကြည့်တိုက်ခ' },
+    'FEE003': { code: 'FEE003', nameEn: 'Lab Fee', nameMy: 'လက်တွေ့ခန်းခ' }
+};
+
+// Handle semester change for student fee config
+function onStudentFeeSemesterChange() {
+    const semesterFilter = document.getElementById('student-fee-semester-filter');
+    const periodFilter = document.getElementById('student-fee-period-filter');
+    const classFilter = document.getElementById('student-fee-class-filter');
+    
+    // Disable period and class if no semester selected
+    if (periodFilter) {
+        periodFilter.disabled = !semesterFilter || !semesterFilter.value;
+        periodFilter.innerHTML = '<option value="">-- Chọn đợt thanh toán --</option>';
+        if (semesterFilter && semesterFilter.value) {
+            const periods = paymentPeriodsData[semesterFilter.value] || [];
+            periods.forEach(period => {
+                const option = document.createElement('option');
+                option.value = period.code;
+                option.textContent = period.name;
+                periodFilter.appendChild(option);
+            });
+        }
+    }
+    if (classFilter) {
+        classFilter.disabled = !semesterFilter || !semesterFilter.value;
+        if (!semesterFilter || !semesterFilter.value) {
+            classFilter.value = '';
+        }
+    }
+    
+    checkAndLoadStudentFeeTable();
+}
+
+// Handle period change for student fee config
+function onStudentFeePeriodChange() {
+    const semesterFilter = document.getElementById('student-fee-semester-filter');
+    const periodFilter = document.getElementById('student-fee-period-filter');
+    const classFilter = document.getElementById('student-fee-class-filter');
+    
+    // Disable class if no period selected
+    if (classFilter) {
+        classFilter.disabled = !periodFilter || !periodFilter.value;
+        if (!periodFilter || !periodFilter.value) {
+            classFilter.value = '';
+        }
+    }
+    
+    checkAndLoadStudentFeeTable();
+}
+
+// Handle class change for student fee config
+function onStudentFeeClassChange() {
+    checkAndLoadStudentFeeTable();
+}
+
+// Check if all filters are selected and load table
+function checkAndLoadStudentFeeTable() {
+    const semesterFilter = document.getElementById('student-fee-semester-filter');
+    const periodFilter = document.getElementById('student-fee-period-filter');
+    const classFilter = document.getElementById('student-fee-class-filter');
+    
+    const hasSemester = semesterFilter && semesterFilter.value;
+    const hasPeriod = periodFilter && periodFilter.value;
+    const hasClass = classFilter && classFilter.value;
+    
+    if (hasSemester && hasPeriod && hasClass) {
+        loadStudentFeeConfigTable();
+    } else {
+        // Show appropriate message
+        const tableBody = document.getElementById('student-fee-config-table-body');
+        const headerRow = document.getElementById('student-fee-config-table-header');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 4;
+        
+        if (!hasSemester) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn kỳ học để hiển thị bảng cấu hình</td></tr>';
+        } else if (!hasPeriod) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn đợt thanh toán để hiển thị bảng cấu hình</td></tr>';
+        } else if (!hasClass) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn lớp để hiển thị bảng cấu hình</td></tr>';
+        }
+    }
+}
+
+// Load Student Fee Config Table
+function loadStudentFeeConfigTable() {
+    const semesterFilter = document.getElementById('student-fee-semester-filter');
+    const periodFilter = document.getElementById('student-fee-period-filter');
+    const classFilter = document.getElementById('student-fee-class-filter');
+    
+    if (!semesterFilter || !periodFilter || !classFilter) return;
+    
+    const selectedSemester = semesterFilter.value;
+    const selectedPeriodCode = periodFilter.value;
+    const selectedClass = classFilter.value;
+    
+    // Get payment period data
+    const periods = paymentPeriodsData[selectedSemester] || [];
+    const selectedPeriod = periods.find(p => p.code === selectedPeriodCode);
+    
+    if (!selectedPeriod) {
+        const tableBody = document.getElementById('student-fee-config-table-body');
+        const headerRow = document.getElementById('student-fee-config-table-header');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 4;
+        tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Không tìm thấy đợt thanh toán</td></tr>';
+        return;
+    }
+    
+    // Get fee items for this period
+    const feeItemCodes = selectedPeriod.feeItems || [];
+    const feeItems = feeItemCodes.map(code => feeItemsData[code]).filter(item => item);
+    
+    if (feeItems.length === 0) {
+        const tableBody = document.getElementById('student-fee-config-table-body');
+        const headerRow = document.getElementById('student-fee-config-table-header');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 4;
+        tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Đợt thanh toán này chưa có khoản phí nào. Vui lòng cấu hình khoản phí cho đợt thanh toán trước.</td></tr>';
+        return;
+    }
+    
+    // Build table header
+    const headerRow = document.getElementById('student-fee-config-table-header');
+    const existingHeaders = Array.from(headerRow.querySelectorAll('th'));
+    
+    // Keep first 3 columns (#, Mã SV, Họ và tên) and last column (Ghi chú)
+    // Remove dynamic fee item columns (from index 3 to last-1)
+    const fixedColumns = 3; // #, Mã SV, Họ và tên
+    const lastColumnIndex = existingHeaders.length - 1; // Ghi chú
+    
+    // Remove columns from right to left to avoid index shifting issues
+    for (let i = lastColumnIndex - 1; i >= fixedColumns; i--) {
+        existingHeaders[i].remove();
+    }
+    
+    // Add dynamic columns for fee items
+    feeItems.forEach((item) => {
+        const th = document.createElement('th');
+        th.textContent = `${item.nameEn} (${item.nameMy})`;
+        th.setAttribute('data-fee-item', item.code);
+        headerRow.insertBefore(th, headerRow.querySelector('th:last-child'));
+    });
+    
+    // Build table body
+    const tableBody = document.getElementById('student-fee-config-table-body');
+    tableBody.innerHTML = '';
+    
+    // Mock student data by class
+    const studentsByClass = {
+        '10A1': [
+            { code: '3120410024', lastName: 'Trương Hồ', firstName: 'An' },
+            { code: '3121560010', lastName: 'Nguyễn Quốc', firstName: 'Anh' },
+            { code: '3120480015', lastName: 'Trần Phạm Ngọc', firstName: 'Ánh' },
+            { code: '3120410048', lastName: 'Huỳnh Gia', firstName: 'Bảo' }
+        ],
+        '10A2': [
+            { code: '3120410025', lastName: 'Lê Văn', firstName: 'Cường' },
+            { code: '3121560011', lastName: 'Phạm Thị', firstName: 'Dung' },
+            { code: '3120480016', lastName: 'Hoàng Văn', firstName: 'Đức' }
+        ],
+        '11A1': [
+            { code: '3120410026', lastName: 'Vũ Thị', firstName: 'Hoa' },
+            { code: '3121560012', lastName: 'Đặng Văn', firstName: 'Hùng' }
+        ],
+        '11A2': [
+            { code: '3120410027', lastName: 'Bùi Thị', firstName: 'Lan' },
+            { code: '3121560013', lastName: 'Trịnh Văn', firstName: 'Minh' }
+        ],
+        '12A1': [
+            { code: '3120410028', lastName: 'Ngô Thị', firstName: 'Nga' },
+            { code: '3121560014', lastName: 'Lý Văn', firstName: 'Phong' }
+        ],
+        '12A2': [
+            { code: '3120410029', lastName: 'Đỗ Thị', firstName: 'Quỳnh' },
+            { code: '3121560015', lastName: 'Võ Văn', firstName: 'Sơn' }
+        ]
+    };
+    
+    const students = studentsByClass[selectedClass] || [];
+    
+    if (students.length === 0) {
+        const headerRow = document.getElementById('student-fee-config-table-header');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 4;
+        tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Lớp này chưa có học sinh</td></tr>';
+        return;
+    }
+    
+    students.forEach((student, rowIndex) => {
+        const tr = document.createElement('tr');
+        const fullName = `${student.lastName} ${student.firstName}`;
+        
+        // Create fixed columns: #, Mã SV, Họ và tên
+        const sttTd = document.createElement('td');
+        sttTd.textContent = rowIndex + 1;
+        tr.appendChild(sttTd);
+        
+        const codeTd = document.createElement('td');
+        codeTd.textContent = student.code;
+        tr.appendChild(codeTd);
+        
+        const nameTd = document.createElement('td');
+        nameTd.textContent = fullName;
+        tr.appendChild(nameTd);
+        
+        // Add dynamic fee item columns
+        feeItems.forEach((item) => {
+            const feeTd = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'form-control fee-input';
+            input.setAttribute('data-fee-item', item.code);
+            input.setAttribute('data-student-code', student.code);
+            input.placeholder = 'Nhập số tiền';
+            input.style.width = '100%';
+            input.style.minWidth = '120px';
+            feeTd.appendChild(input);
+            tr.appendChild(feeTd);
+        });
+        
+        // Add notes column
+        const notesTd = document.createElement('td');
+        const notesInput = document.createElement('input');
+        notesInput.type = 'text';
+        notesInput.className = 'form-control notes-input';
+        notesInput.setAttribute('data-student-code', student.code);
+        notesInput.placeholder = 'Ghi chú';
+        notesInput.style.width = '100%';
+        notesTd.appendChild(notesInput);
+        tr.appendChild(notesTd);
+        
+        tableBody.appendChild(tr);
+    });
+}
+
+// Save student fee config
+function saveStudentFeeConfig() {
+    const tableBody = document.getElementById('student-fee-config-table-body');
+    const rows = tableBody.querySelectorAll('tr');
+    const students = [];
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 4) return; // Skip empty rows
+        
+        const studentCode = cells[1].textContent.trim();
+        const feeInputs = row.querySelectorAll('.fee-input');
+        const notesInput = row.querySelector('.notes-input');
+        
+        const fees = {};
+        feeInputs.forEach(input => {
+            const feeItem = input.getAttribute('data-fee-item');
+            const amount = parseFloat(input.value) || 0;
+            fees[feeItem] = amount;
+        });
+        
+        students.push({
+            code: studentCode,
+            fees: fees,
+            notes: notesInput ? notesInput.value : ''
+        });
+    });
+    
+    console.log('Saving student fee config:', students);
+    alert('Đã lưu cấu hình khoản phí thành công!');
+}
+
 // Load students based on selected class
 function loadStudents() {
     const classSelect = document.getElementById('class-select');
@@ -869,23 +1171,23 @@ function showFeeItemDetail(cells) {
     document.getElementById('feeitem-detail-code').textContent = cells[1].textContent;
     document.getElementById('feeitem-detail-name-en').textContent = cells[2].textContent;
     document.getElementById('feeitem-detail-name-my').textContent = cells[3].textContent;
-    document.getElementById('feeitem-detail-amount').textContent = cells[4].textContent;
-    document.getElementById('feeitem-detail-unit').textContent = cells[5].textContent;
+    document.getElementById('feeitem-detail-description').textContent = cells[4].textContent || 'Không có mô tả';
     showModal('feeitem-detail-modal');
 }
 
 // Payment Period Detail
 function showPaymentPeriodDetail(cells) {
     document.getElementById('payment-period-detail-code').textContent = cells[1].textContent;
-    document.getElementById('payment-period-detail-name-en').textContent = cells[2].textContent;
-    document.getElementById('payment-period-detail-name-my').textContent = cells[3].textContent;
-    document.getElementById('payment-period-detail-start-date').textContent = cells[4].textContent;
-    document.getElementById('payment-period-detail-end-date').textContent = cells[5].textContent;
+    document.getElementById('payment-period-detail-semester').textContent = cells[2].textContent;
+    document.getElementById('payment-period-detail-name-en').textContent = cells[3].textContent;
+    document.getElementById('payment-period-detail-name-my').textContent = cells[4].textContent;
+    document.getElementById('payment-period-detail-start-date').textContent = cells[5].textContent;
+    document.getElementById('payment-period-detail-end-date').textContent = cells[6].textContent;
     
     // Calculate days
     try {
-        const startDateStr = cells[4].textContent.trim();
-        const endDateStr = cells[5].textContent.trim();
+        const startDateStr = cells[5].textContent.trim();
+        const endDateStr = cells[6].textContent.trim();
         const startDate = new Date(startDateStr.split('/').reverse().join('-'));
         const endDate = new Date(endDateStr.split('/').reverse().join('-'));
         const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
@@ -904,7 +1206,7 @@ function showPaymentConfigDetail(cells) {
     document.getElementById('payment-config-detail-period-code').textContent = 'PP' + cells[0].textContent.padStart(3, '0');
     document.getElementById('payment-config-detail-feeitem').textContent = cells[2].textContent;
     document.getElementById('payment-config-detail-feeitem-code').textContent = 'FEE' + cells[0].textContent.padStart(3, '0');
-    document.getElementById('payment-config-detail-amount').textContent = '500,000 MMK'; // Mock data
+    document.getElementById('payment-config-detail-note').textContent = cells[3].textContent || 'Không có ghi chú';
     showModal('payment-config-detail-modal');
 }
 

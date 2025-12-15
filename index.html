@@ -99,8 +99,7 @@
                                         <th>Mã code</th>
                                         <th>Tên khoản phí (EN)</th>
                                         <th>Tên khoản phí (MY)</th>
-                                        <th>Số tiền</th>
-                                        <th>Đơn vị tính</th>
+                                        <th>Mô tả</th>
                                         <th>Hành động</th>
                                     </tr>
                                 </thead>
@@ -110,8 +109,7 @@
                                         <td>FEE001</td>
                                         <td>Tuition Fee</td>
                                         <td>ကျောင်းလချေး</td>
-                                        <td>500,000</td>
-                                        <td>MMK</td>
+                                        <td>Phí học phí hàng kỳ</td>
                                         <td class="action-cell">
                                             <button class="btn-icon btn-view" title="Xem">👁️</button>
                                             <button class="btn-icon btn-edit" title="Sửa">✏️</button>
@@ -146,12 +144,8 @@
                                         <input type="text" class="form-control" required>
                                     </div>
                                     <div class="form-group">
-                                        <label>Số tiền <span class="required">*</span></label>
-                                        <input type="number" class="form-control" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Đơn vị tính <span class="required">*</span></label>
-                                        <input type="text" class="form-control" required>
+                                        <label>Mô tả</label>
+                                        <textarea class="form-control" rows="3" placeholder="Nhập mô tả cho khoản phí"></textarea>
                                     </div>
                                     <div class="form-actions">
                                         <button type="button" class="btn btn-secondary" onclick="closeModal('add-feeitem-modal')">Hủy</button>
@@ -179,6 +173,7 @@
                                     <tr>
                                         <th>STT</th>
                                         <th>Mã code</th>
+                                        <th>Kỳ học</th>
                                         <th>Tên đợt thanh toán (EN)</th>
                                         <th>Tên đợt thanh toán (MY)</th>
                                         <th>Ngày bắt đầu</th>
@@ -190,6 +185,7 @@
                                     <tr>
                                         <td>1</td>
                                         <td>PP001</td>
+                                        <td>Học kỳ 1</td>
                                         <td>First Semester Payment</td>
                                         <td>ပထမနှစ်ဝက် ငွေပေးချေမှု</td>
                                         <td>01/01/2024</td>
@@ -218,6 +214,15 @@
                                     <div class="form-group">
                                         <label>Mã code <span class="required">*</span></label>
                                         <input type="text" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Kỳ học <span class="required">*</span></label>
+                                        <select class="form-control" required>
+                                            <option value="">-- Chọn kỳ học --</option>
+                                            <option value="semester1">Học kỳ 1</option>
+                                            <option value="semester2">Học kỳ 2</option>
+                                            <option value="semester3">Học kỳ 3</option>
+                                        </select>
                                     </div>
                                     <div class="form-group">
                                         <label>Tên đợt thanh toán tiếng Anh <span class="required">*</span></label>
@@ -262,6 +267,7 @@
                                         <th>STT</th>
                                         <th>Tên đợt thanh toán</th>
                                         <th>Tên FeeItem</th>
+                                        <th>Ghi chú</th>
                                         <th>Hành động</th>
                                     </tr>
                                 </thead>
@@ -270,6 +276,7 @@
                                         <td>1</td>
                                         <td>First Semester Payment</td>
                                         <td>Tuition Fee</td>
+                                        <td>Ghi chú cho cấu hình đợt thanh toán</td>
                                         <td class="action-cell">
                                             <button class="btn-icon btn-view" title="Xem">👁️</button>
                                             <button class="btn-icon btn-edit" title="Sửa">✏️</button>
@@ -307,6 +314,10 @@
                                             <option value="2">Library Fee</option>
                                         </select>
                                     </div>
+                                    <div class="form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea class="form-control" rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
+                                    </div>
                                     <div class="form-actions">
                                         <button type="button" class="btn btn-secondary" onclick="closeModal('add-payment-config-modal')">Hủy</button>
                                         <button type="submit" class="btn btn-primary">Lưu</button>
@@ -322,104 +333,50 @@
                     <div class="content-card">
                         <div class="card-header">
                             <h3 class="card-title">Cấu hình khoản phí cho học sinh</h3>
-                            <button class="btn btn-primary" onclick="showAddStudentFeeConfigForm()">
-                                <span>+</span> Thêm mới Cấu hình
-                            </button>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select class="form-control" id="student-fee-semester-filter" style="width: 180px;" onchange="onStudentFeeSemesterChange()">
+                                    <option value="">-- Chọn kỳ học --</option>
+                                    <option value="semester1">Học kỳ 1</option>
+                                    <option value="semester2">Học kỳ 2</option>
+                                    <option value="semester3">Học kỳ 3</option>
+                                </select>
+                                <select class="form-control" id="student-fee-period-filter" style="width: 200px;" onchange="onStudentFeePeriodChange()">
+                                    <option value="">-- Chọn đợt thanh toán --</option>
+                                </select>
+                                <select class="form-control" id="student-fee-class-filter" style="width: 180px;" onchange="onStudentFeeClassChange()">
+                                    <option value="">-- Chọn lớp --</option>
+                                    <option value="10A1">10A1</option>
+                                    <option value="10A2">10A2</option>
+                                    <option value="11A1">11A1</option>
+                                    <option value="11A2">11A2</option>
+                                    <option value="12A1">12A1</option>
+                                    <option value="12A2">12A2</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="saveStudentFeeConfig()">
+                                    <span>💾</span> Lưu cấu hình
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="table-container">
-                            <table class="data-table">
+                            <table class="data-table" id="student-fee-config-table">
                                 <thead>
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Mã học sinh</th>
-                                        <th>Tên học sinh</th>
-                                        <th>Lớp</th>
-                                        <th>Đợt thanh toán</th>
+                                    <tr id="student-fee-config-table-header">
+                                        <th>#</th>
+                                        <th>Mã SV</th>
+                                        <th>Họ và tên</th>
+                                        <!-- Dynamic columns will be inserted here -->
                                         <th>Ghi chú</th>
-                                        <th>Tổng số tiền</th>
-                                        <th>Hành động</th>
                                     </tr>
                                 </thead>
                                 <tbody id="student-fee-config-table-body">
                                     <tr>
-                                        <td>1</td>
-                                        <td>STU001</td>
-                                        <td>Nguyễn Văn A</td>
-                                        <td>10A1</td>
-                                        <td>First Semester Payment</td>
-                                        <td>Ghi chú thanh toán</td>
-                                        <td>1,500,000 MMK</td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon btn-view" title="Xem">👁️</button>
-                                            <button class="btn-icon btn-edit" title="Sửa">✏️</button>
-                                            <button class="btn-icon btn-delete" title="Xóa">🗑️</button>
-                                            <button class="btn-icon btn-active" title="Active">✓</button>
+                                        <td colspan="4" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                                            Vui lòng chọn kỳ học, đợt thanh toán và lớp ở trên để hiển thị bảng cấu hình
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-
-                    <!-- Add Student Fee Config Form Modal -->
-                    <div class="modal" id="add-student-fee-config-modal">
-                        <div class="modal-content modal-large">
-                            <div class="modal-header">
-                                <h3>Thêm mới Cấu hình khoản phí cho học sinh</h3>
-                                <button class="modal-close" onclick="closeModal('add-student-fee-config-modal')">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="student-fee-config-form">
-                                    <div class="form-group">
-                                        <label>Lớp <span class="required">*</span></label>
-                                        <select class="form-control" id="class-select" required onchange="loadStudents()">
-                                            <option value="">-- Chọn lớp --</option>
-                                            <option value="10A1">10A1</option>
-                                            <option value="10A2">10A2</option>
-                                            <option value="11A1">11A1</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Học sinh <span class="required">*</span></label>
-                                        <select class="form-control" id="student-select" required>
-                                            <option value="">-- Chọn học sinh --</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Đợt thanh toán <span class="required">*</span></label>
-                                        <select class="form-control" id="payment-period-select" required onchange="loadFeeItems()">
-                                            <option value="">-- Chọn đợt thanh toán --</option>
-                                            <option value="1">First Semester Payment</option>
-                                            <option value="2">Second Semester Payment</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Các khoản thanh toán <span class="required">*</span></label>
-                                        <div class="checkbox-group" id="fee-items-checkbox">
-                                            <!-- Dynamic checkboxes will be loaded here -->
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Các khoản miễn giảm</label>
-                                        <div class="checkbox-group" id="discount-items-checkbox">
-                                            <!-- Dynamic checkboxes will be loaded here -->
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Ghi chú tiếng Anh</label>
-                                        <textarea class="form-control" rows="3"></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Ghi chú tiếng Myanmar</label>
-                                        <textarea class="form-control" rows="3"></textarea>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button type="button" class="btn btn-secondary" onclick="closeModal('add-student-fee-config-modal')">Hủy</button>
-                                        <button type="submit" class="btn btn-primary">Lưu</button>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -921,12 +878,8 @@
                         <div class="detail-value" id="feeitem-detail-name-my">ကျောင်းလချေး</div>
                     </div>
                     <div class="detail-row">
-                        <div class="detail-label">Số tiền:</div>
-                        <div class="detail-value" id="feeitem-detail-amount">500,000</div>
-                    </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Đơn vị tính:</div>
-                        <div class="detail-value" id="feeitem-detail-unit">MMK</div>
+                        <div class="detail-label">Mô tả:</div>
+                        <div class="detail-value" id="feeitem-detail-description">Phí học phí hàng kỳ</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Trạng thái:</div>
@@ -954,6 +907,10 @@
                     <div class="detail-row">
                         <div class="detail-label">Mã code:</div>
                         <div class="detail-value" id="payment-period-detail-code">PP001</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Kỳ học:</div>
+                        <div class="detail-value" id="payment-period-detail-semester">Học kỳ 1</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Tên đợt thanh toán tiếng Anh:</div>
@@ -1019,8 +976,8 @@
                         <div class="detail-value" id="payment-config-detail-feeitem-code">FEE001</div>
                     </div>
                     <div class="detail-row">
-                        <div class="detail-label">Số tiền:</div>
-                        <div class="detail-value" id="payment-config-detail-amount">500,000 MMK</div>
+                        <div class="detail-label">Ghi chú:</div>
+                        <div class="detail-value" id="payment-config-detail-note">Ghi chú cho cấu hình đợt thanh toán</div>
                     </div>
                     <div class="detail-row">
                         <div class="detail-label">Trạng thái:</div>

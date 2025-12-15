@@ -79,6 +79,21 @@ function initNavigation() {
                     checkAndLoadStudentFeeTable();
                 }, 100);
             }
+            
+            // Special handling for attendance module
+            if (moduleName === 'attendance') {
+                setTimeout(function() {
+                    // Initialize dropdown states
+                    const semesterFilter = document.getElementById('attendance-semester-filter');
+                    const classFilter = document.getElementById('attendance-class-filter');
+                    
+                    if (classFilter) {
+                        classFilter.disabled = !semesterFilter || !semesterFilter.value;
+                    }
+                    
+                    checkAndLoadAttendanceTable();
+                }, 100);
+            }
         });
     });
 }
@@ -95,7 +110,9 @@ function updatePageTitle(moduleName) {
         'invoice-management': 'Quản lý Hóa đơn',
         'grade': 'Tạo đầu điểm',
         'grade-input': 'Nhập điểm',
-        'grade-approval': 'Duyệt điểm cho Admin'
+        'grade-approval': 'Duyệt điểm cho Admin',
+        'schedule': 'Lịch học',
+        'attendance': 'Điểm danh'
     };
     
     if (pageTitle && titles[moduleName]) {
@@ -641,6 +658,344 @@ function filterApprovalList() {
     });
 }
 
+// Schedule Functions
+let schedules = [
+    { id: 1, teacher: 'emp1', room: 'R001', fromDate: '2025-11-19T15:44', toDate: '2025-11-19T17:44', note: 'dạy và học' },
+    { id: 2, teacher: 'nsa001', room: '101', fromDate: '2025-12-09T11:00', toDate: '2025-12-10T00:00', note: '' }
+];
+
+// Show add schedule form
+function showAddScheduleForm() {
+    const form = document.getElementById('schedule-form');
+    if (form) {
+        form.reset();
+        form.removeAttribute('data-editing-id');
+        showModal('add-schedule-modal');
+    }
+}
+
+// Format datetime for display
+function formatDateTime(dateTimeStr) {
+    if (!dateTimeStr) return '';
+    const date = new Date(dateTimeStr);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${hours}:${minutes} ${day}/${month}/${year}`;
+}
+
+// Add new schedule
+function addSchedule() {
+    const teacher = document.getElementById('schedule-teacher').value;
+    const room = document.getElementById('schedule-room').value;
+    const fromDate = document.getElementById('schedule-from-date').value;
+    const toDate = document.getElementById('schedule-to-date').value;
+    const note = document.getElementById('schedule-note').value;
+    
+    if (!teacher || !room || !fromDate || !toDate) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        return;
+    }
+    
+    const newSchedule = {
+        id: schedules.length + 1,
+        teacher: teacher,
+        room: room,
+        fromDate: fromDate,
+        toDate: toDate,
+        note: note
+    };
+    
+    schedules.push(newSchedule);
+    updateScheduleTable();
+    updateAttendanceTable();
+    closeModal('add-schedule-modal');
+    alert('Đã thêm lịch học thành công!');
+}
+
+// Update schedule table
+function updateScheduleTable() {
+    const tableBody = document.getElementById('schedule-table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    
+    schedules.forEach((schedule, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${schedule.teacher}</td>
+            <td>${schedule.room}</td>
+            <td>${formatDateTime(schedule.fromDate)}</td>
+            <td>${formatDateTime(schedule.toDate)}</td>
+            <td>${schedule.note || ''}</td>
+            <td class="action-cell">
+                <button class="btn-icon btn-edit" title="Sửa" onclick="editSchedule(${schedule.id})">✏️</button>
+                <button class="btn-icon btn-delete" title="Xóa" onclick="deleteSchedule(${schedule.id})">🗑️</button>
+                <button class="btn-icon btn-active" title="Thêm" onclick="addScheduleItem(${schedule.id})">+</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+// Edit schedule
+function editSchedule(id) {
+    const schedule = schedules.find(s => s.id === id);
+    if (!schedule) return;
+    
+    document.getElementById('schedule-teacher').value = schedule.teacher;
+    document.getElementById('schedule-room').value = schedule.room;
+    document.getElementById('schedule-from-date').value = schedule.fromDate;
+    document.getElementById('schedule-to-date').value = schedule.toDate;
+    document.getElementById('schedule-note').value = schedule.note;
+    
+    // Store editing ID
+    document.getElementById('schedule-form').setAttribute('data-editing-id', id);
+    showModal('add-schedule-modal');
+}
+
+// Delete schedule
+function deleteSchedule(id) {
+    if (confirm('Bạn có chắc chắn muốn xóa lịch học này?')) {
+        schedules = schedules.filter(s => s.id !== id);
+        updateScheduleTable();
+        updateAttendanceTable();
+        alert('Đã xóa lịch học thành công!');
+    }
+}
+
+// Add schedule item (duplicate)
+function addScheduleItem(id) {
+    const schedule = schedules.find(s => s.id === id);
+    if (!schedule) return;
+    
+    const newSchedule = {
+        id: schedules.length + 1,
+        teacher: schedule.teacher,
+        room: schedule.room,
+        fromDate: schedule.fromDate,
+        toDate: schedule.toDate,
+        note: schedule.note
+    };
+    
+    schedules.push(newSchedule);
+    updateScheduleTable();
+    updateAttendanceTable();
+    alert('Đã thêm lịch học mới!');
+}
+
+// Attendance Functions
+// Handle semester change for attendance
+function onAttendanceSemesterChange() {
+    const semesterFilter = document.getElementById('attendance-semester-filter');
+    const classFilter = document.getElementById('attendance-class-filter');
+    
+    // Disable class if no semester selected
+    if (classFilter) {
+        classFilter.disabled = !semesterFilter || !semesterFilter.value;
+        if (!semesterFilter || !semesterFilter.value) {
+            classFilter.value = '';
+        }
+    }
+    
+    checkAndLoadAttendanceTable();
+}
+
+// Handle class change for attendance
+function onAttendanceClassChange() {
+    checkAndLoadAttendanceTable();
+}
+
+// Check if all filters are selected and load table
+function checkAndLoadAttendanceTable() {
+    const semesterFilter = document.getElementById('attendance-semester-filter');
+    const classFilter = document.getElementById('attendance-class-filter');
+    
+    const hasSemester = semesterFilter && semesterFilter.value;
+    const hasClass = classFilter && classFilter.value;
+    
+    if (hasSemester && hasClass) {
+        loadAttendanceTable();
+    } else {
+        // Show appropriate message
+        const tableBody = document.getElementById('attendance-table-body');
+        const headerRow = document.getElementById('attendance-table-header');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 4;
+        
+        if (!hasSemester) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn kỳ học để hiển thị bảng điểm danh</td></tr>';
+        } else if (!hasClass) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn lớp để hiển thị bảng điểm danh</td></tr>';
+        }
+    }
+}
+
+// Load attendance table
+function loadAttendanceTable() {
+    const classFilter = document.getElementById('attendance-class-filter');
+    if (!classFilter || !classFilter.value) return;
+    
+    const selectedClass = classFilter.value;
+    
+    // Build table header
+    const headerRow = document.getElementById('attendance-table-header');
+    if (!headerRow) return;
+    const existingHeaders = Array.from(headerRow.querySelectorAll('th'));
+    
+    // Keep first 3 columns (#, Mã SV, Họ và tên) and last column (Ghi chú)
+    // Remove dynamic schedule columns (from index 3 to last-1)
+    const fixedColumns = 3; // #, Mã SV, Họ và tên
+    const lastColumnIndex = existingHeaders.length - 1; // Ghi chú
+    
+    // Remove columns from right to left to avoid index shifting issues
+    for (let i = lastColumnIndex - 1; i >= fixedColumns; i--) {
+        existingHeaders[i].remove();
+    }
+    
+    // Add dynamic columns for schedules
+    schedules.forEach((schedule) => {
+        const th = document.createElement('th');
+        th.textContent = `${schedule.teacher} - ${schedule.room} (${formatDateTime(schedule.fromDate)})`;
+        th.setAttribute('data-schedule-id', schedule.id);
+        headerRow.insertBefore(th, headerRow.querySelector('th:last-child'));
+    });
+    
+    // Build table body
+    const tableBody = document.getElementById('attendance-table-body');
+    if (!tableBody) return;
+    tableBody.innerHTML = '';
+    
+    // Mock student data by class
+    const studentsByClass = {
+        '10A1': [
+            { code: '3120410024', lastName: 'Trương Hồ', firstName: 'An' },
+            { code: '3121560010', lastName: 'Nguyễn Quốc', firstName: 'Anh' },
+            { code: '3120480015', lastName: 'Trần Phạm Ngọc', firstName: 'Ánh' },
+            { code: '3120410048', lastName: 'Huỳnh Gia', firstName: 'Bảo' }
+        ],
+        '10A2': [
+            { code: '3120410025', lastName: 'Lê Văn', firstName: 'Cường' },
+            { code: '3121560011', lastName: 'Phạm Thị', firstName: 'Dung' },
+            { code: '3120480016', lastName: 'Hoàng Văn', firstName: 'Đức' }
+        ],
+        '11A1': [
+            { code: '3120410026', lastName: 'Vũ Thị', firstName: 'Hoa' },
+            { code: '3121560012', lastName: 'Đặng Văn', firstName: 'Hùng' }
+        ],
+        '11A2': [
+            { code: '3120410027', lastName: 'Bùi Thị', firstName: 'Lan' },
+            { code: '3121560013', lastName: 'Trịnh Văn', firstName: 'Minh' }
+        ],
+        '12A1': [
+            { code: '3120410028', lastName: 'Ngô Thị', firstName: 'Nga' },
+            { code: '3121560014', lastName: 'Lý Văn', firstName: 'Phong' }
+        ],
+        '12A2': [
+            { code: '3120410029', lastName: 'Đỗ Thị', firstName: 'Quỳnh' },
+            { code: '3121560015', lastName: 'Võ Văn', firstName: 'Sơn' }
+        ]
+    };
+    
+    const students = studentsByClass[selectedClass] || [];
+    
+    if (students.length === 0) {
+        const headerRow = document.getElementById('attendance-table-header');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 4;
+        tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Lớp này chưa có học sinh</td></tr>';
+        return;
+    }
+    
+    students.forEach((student, rowIndex) => {
+        const tr = document.createElement('tr');
+        const fullName = `${student.lastName} ${student.firstName}`;
+        
+        // Create fixed columns: #, Mã SV, Họ và tên
+        const sttTd = document.createElement('td');
+        sttTd.textContent = rowIndex + 1;
+        tr.appendChild(sttTd);
+        
+        const codeTd = document.createElement('td');
+        codeTd.textContent = student.code;
+        tr.appendChild(codeTd);
+        
+        const nameTd = document.createElement('td');
+        nameTd.textContent = fullName;
+        tr.appendChild(nameTd);
+        
+        // Add dynamic schedule columns with checkboxes
+        schedules.forEach((schedule) => {
+            const attendanceTd = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'attendance-checkbox';
+            checkbox.setAttribute('data-schedule-id', schedule.id);
+            checkbox.setAttribute('data-student-code', student.code);
+            checkbox.style.width = '20px';
+            checkbox.style.height = '20px';
+            checkbox.style.cursor = 'pointer';
+            attendanceTd.style.textAlign = 'center';
+            attendanceTd.appendChild(checkbox);
+            tr.appendChild(attendanceTd);
+        });
+        
+        // Add notes column
+        const notesTd = document.createElement('td');
+        const notesInput = document.createElement('input');
+        notesInput.type = 'text';
+        notesInput.className = 'form-control notes-input';
+        notesInput.setAttribute('data-student-code', student.code);
+        notesInput.placeholder = 'Ghi chú';
+        notesInput.style.width = '100%';
+        notesTd.appendChild(notesInput);
+        tr.appendChild(notesTd);
+        
+        tableBody.appendChild(tr);
+    });
+}
+
+// Update attendance table when schedules change
+function updateAttendanceTable() {
+    const semesterFilter = document.getElementById('attendance-semester-filter');
+    const classFilter = document.getElementById('attendance-class-filter');
+    if (semesterFilter && semesterFilter.value && classFilter && classFilter.value) {
+        loadAttendanceTable();
+    }
+}
+
+// Save attendance
+function saveAttendance() {
+    const tableBody = document.getElementById('attendance-table-body');
+    if (!tableBody) return;
+    const rows = tableBody.querySelectorAll('tr');
+    const attendanceData = [];
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 4) return; // Skip empty rows
+        
+        const studentCode = cells[1].textContent.trim();
+        const checkboxes = row.querySelectorAll('.attendance-checkbox');
+        const notesInput = row.querySelector('.notes-input');
+        
+        const attendance = {};
+        checkboxes.forEach(checkbox => {
+            const scheduleId = checkbox.getAttribute('data-schedule-id');
+            attendance[scheduleId] = checkbox.checked;
+        });
+        
+        attendanceData.push({
+            code: studentCode,
+            attendance: attendance,
+            notes: notesInput ? notesInput.value : ''
+        });
+    });
+    
+    console.log('Saving attendance:', attendanceData);
+    alert('Đã lưu điểm danh thành công!');
+}
+
 // Student Fee Config Functions
 // Mock payment periods data
 const paymentPeriodsData = {
@@ -892,6 +1247,7 @@ function loadStudentFeeConfigTable() {
     });
 }
 
+
 // Save student fee config
 function saveStudentFeeConfig() {
     const tableBody = document.getElementById('student-fee-config-table-body');
@@ -1016,6 +1372,41 @@ document.addEventListener('DOMContentLoaded', function() {
             closeModal('add-feeitem-modal');
             feeItemForm.reset();
         });
+    }
+    
+    // Schedule form
+    const scheduleForm = document.getElementById('schedule-form');
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const editingId = scheduleForm.getAttribute('data-editing-id');
+            if (editingId) {
+                // Update existing schedule
+                const schedule = schedules.find(s => s.id === parseInt(editingId));
+                if (schedule) {
+                    schedule.teacher = document.getElementById('schedule-teacher').value;
+                    schedule.room = document.getElementById('schedule-room').value;
+                    schedule.fromDate = document.getElementById('schedule-from-date').value;
+                    schedule.toDate = document.getElementById('schedule-to-date').value;
+                    schedule.note = document.getElementById('schedule-note').value;
+                    updateScheduleTable();
+                    updateAttendanceTable();
+                    alert('Đã cập nhật lịch học thành công!');
+                }
+                scheduleForm.removeAttribute('data-editing-id');
+            } else {
+                // Add new schedule
+                addSchedule();
+            }
+            closeModal('add-schedule-modal');
+            scheduleForm.reset();
+        });
+    }
+    
+    // Initialize schedule table (only if schedule module exists)
+    const scheduleTableBody = document.getElementById('schedule-table-body');
+    if (scheduleTableBody) {
+        updateScheduleTable();
     }
 
     // Payment Period form

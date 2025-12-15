@@ -54,6 +54,14 @@
                         <span class="nav-icon">✅</span>
                         <span class="nav-text">Duyệt điểm</span>
                     </li>
+                    <li class="nav-item" data-module="schedule">
+                        <span class="nav-icon">📅</span>
+                        <span class="nav-text">Lịch học</span>
+                    </li>
+                    <li class="nav-item" data-module="attendance">
+                        <span class="nav-icon">✓</span>
+                        <span class="nav-text">Điểm danh</span>
+                    </li>
                 </ul>
             </nav>
         </aside>
@@ -847,6 +855,150 @@
                                     <button type="button" class="btn btn-primary" id="approval-approve-btn" onclick="approveGradeFromDetail()">Duyệt</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Module -->
+                <div class="module-content" id="schedule-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Lịch học</h3>
+                            <button class="btn btn-primary" onclick="showAddScheduleForm()">
+                                <span>+</span> New Item
+                            </button>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>TEACHER</th>
+                                        <th>ROOM</th>
+                                        <th>FROM DATE</th>
+                                        <th>TO DATE</th>
+                                        <th>NOTE</th>
+                                        <th>ACTIONS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-table-body">
+                                    <tr>
+                                        <td>1</td>
+                                        <td>emp1</td>
+                                        <td>R001</td>
+                                        <td>15:44 19/11/2025</td>
+                                        <td>17:44 19/11/2025</td>
+                                        <td>dạy và học</td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-edit" title="Sửa" onclick="editSchedule(1)">✏️</button>
+                                            <button class="btn-icon btn-delete" title="Xóa" onclick="deleteSchedule(1)">🗑️</button>
+                                            <button class="btn-icon btn-active" title="Thêm" onclick="addScheduleItem(1)">+</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>nsa001</td>
+                                        <td>101</td>
+                                        <td>11:00 09/12/2025</td>
+                                        <td>00:00 10/12/2025</td>
+                                        <td></td>
+                                        <td class="action-cell">
+                                            <button class="btn-icon btn-edit" title="Sửa" onclick="editSchedule(2)">✏️</button>
+                                            <button class="btn-icon btn-delete" title="Xóa" onclick="deleteSchedule(2)">🗑️</button>
+                                            <button class="btn-icon btn-active" title="Thêm" onclick="addScheduleItem(2)">+</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Schedule Form Modal -->
+                    <div class="modal" id="add-schedule-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Thêm mới Lịch học</h3>
+                                <button class="modal-close" onclick="closeModal('add-schedule-modal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="schedule-form">
+                                    <div class="form-group">
+                                        <label>Giáo viên <span class="required">*</span></label>
+                                        <input type="text" class="form-control" id="schedule-teacher" required placeholder="Nhập mã giáo viên">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phòng học <span class="required">*</span></label>
+                                        <input type="text" class="form-control" id="schedule-room" required placeholder="Nhập mã phòng">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Từ ngày giờ <span class="required">*</span></label>
+                                        <input type="datetime-local" class="form-control" id="schedule-from-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Đến ngày giờ <span class="required">*</span></label>
+                                        <input type="datetime-local" class="form-control" id="schedule-to-date" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea class="form-control" id="schedule-note" rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-secondary" onclick="closeModal('add-schedule-modal')">Hủy</button>
+                                        <button type="submit" class="btn btn-primary">Lưu</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Module -->
+                <div class="module-content" id="attendance-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Điểm danh</h3>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select class="form-control" id="attendance-semester-filter" style="width: 180px;" onchange="onAttendanceSemesterChange()">
+                                    <option value="">-- Chọn kỳ học --</option>
+                                    <option value="semester1">Học kỳ 1</option>
+                                    <option value="semester2">Học kỳ 2</option>
+                                    <option value="semester3">Học kỳ 3</option>
+                                </select>
+                                <select class="form-control" id="attendance-class-filter" style="width: 180px;" onchange="onAttendanceClassChange()">
+                                    <option value="">-- Chọn lớp --</option>
+                                    <option value="10A1">10A1</option>
+                                    <option value="10A2">10A2</option>
+                                    <option value="11A1">11A1</option>
+                                    <option value="11A2">11A2</option>
+                                    <option value="12A1">12A1</option>
+                                    <option value="12A2">12A2</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="saveAttendance()">
+                                    <span>💾</span> Lưu điểm danh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="attendance-table">
+                                <thead>
+                                    <tr id="attendance-table-header">
+                                        <th>#</th>
+                                        <th>Mã SV</th>
+                                        <th>Họ và tên</th>
+                                        <!-- Dynamic columns will be inserted here -->
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                    <tbody id="attendance-table-body">
+                                        <tr>
+                                            <td colspan="4" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                                                Vui lòng chọn kỳ học và lớp ở trên để hiển thị bảng điểm danh
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

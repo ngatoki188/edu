@@ -1016,6 +1016,21 @@
                         <div class="card-header">
                             <h3 class="card-title">Duyệt phí cho học sinh</h3>
                             <div style="display: flex; gap: 12px; align-items: center;">
+                                <select class="form-control" id="fee-approval-semester-filter" style="width: 180px;" onchange="onFeeApprovalSemesterChange()">
+                                    <option value="">-- Chọn kỳ học --</option>
+                                    <option value="semester1">Học kỳ 1</option>
+                                    <option value="semester2">Học kỳ 2</option>
+                                    <option value="semester3">Học kỳ 3</option>
+                                </select>
+                                <select class="form-control" id="fee-approval-class-filter" style="width: 180px;" onchange="onFeeApprovalClassChange()">
+                                    <option value="">-- Chọn lớp --</option>
+                                    <option value="10A1">10A1</option>
+                                    <option value="10A2">10A2</option>
+                                    <option value="11A1">11A1</option>
+                                    <option value="11A2">11A2</option>
+                                    <option value="12A1">12A1</option>
+                                    <option value="12A2">12A2</option>
+                                </select>
                                 <select class="form-control" id="fee-approval-status-filter" style="width: 180px;" onchange="filterFeeApprovalList()">
                                     <option value="">-- Tất cả trạng thái --</option>
                                     <option value="pending">Chờ duyệt</option>
@@ -1032,6 +1047,7 @@
                                         <th>STT</th>
                                         <th>Mã học sinh</th>
                                         <th>Tên học sinh</th>
+                                        <th>Lớp</th>
                                         <th>Kỳ học</th>
                                         <th>Đợt thanh toán</th>
                                         <th>Số tiền</th>
@@ -1041,43 +1057,8 @@
                                 </thead>
                                 <tbody id="fee-approval-table-body">
                                     <tr>
-                                        <td>1</td>
-                                        <td>STU001</td>
-                                        <td>Nguyễn Văn A</td>
-                                        <td>Học kỳ 1</td>
-                                        <td>First Semester Payment</td>
-                                        <td>550,000 MMK</td>
-                                        <td><span class="badge badge-warning">Chờ duyệt</span></td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(1)">👁️</button>
-                                            <button class="btn-icon btn-edit" style="background-color: rgba(40, 199, 111, 0.1);" title="Duyệt" onclick="approveFee(1)">✓</button>
-                                            <button class="btn-icon btn-delete" title="Từ chối" onclick="rejectFee(1)">✗</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>STU002</td>
-                                        <td>Trần Thị B</td>
-                                        <td>Học kỳ 1</td>
-                                        <td>First Semester Payment</td>
-                                        <td>600,000 MMK</td>
-                                        <td><span class="badge badge-success">Đã duyệt</span></td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(2)">👁️</button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>STU003</td>
-                                        <td>Lê Văn C</td>
-                                        <td>Học kỳ 1</td>
-                                        <td>First Semester Payment</td>
-                                        <td>520,000 MMK</td>
-                                        <td><span class="badge badge-warning">Chờ duyệt</span></td>
-                                        <td class="action-cell">
-                                            <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(3)">👁️</button>
-                                            <button class="btn-icon btn-edit" style="background-color: rgba(40, 199, 111, 0.1);" title="Duyệt" onclick="approveFee(3)">✓</button>
-                                            <button class="btn-icon btn-delete" title="Từ chối" onclick="rejectFee(3)">✗</button>
+                                        <td colspan="9" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                                            Vui lòng chọn kỳ học và lớp ở trên để hiển thị danh sách phí cần duyệt
                                         </td>
                                     </tr>
                                 </tbody>

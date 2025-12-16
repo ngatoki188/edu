@@ -95,6 +95,21 @@ function initNavigation() {
                     checkAndLoadAttendanceTable();
                 }, 100);
             }
+            
+            // Special handling for fee-approval module
+            if (moduleName === 'fee-approval') {
+                setTimeout(function() {
+                    // Initialize dropdown states
+                    const semesterFilter = document.getElementById('fee-approval-semester-filter');
+                    const classFilter = document.getElementById('fee-approval-class-filter');
+                    
+                    if (classFilter) {
+                        classFilter.disabled = !semesterFilter || !semesterFilter.value;
+                    }
+                    
+                    checkAndLoadFeeApprovalTable();
+                }, 100);
+            }
         });
     });
 }
@@ -842,16 +857,19 @@ function showFeeApprovalDetail(id) {
 // Approve fee
 function approveFee(id) {
     if (confirm('Bạn có chắc chắn muốn duyệt phí này?')) {
-        // Update status in table
-        const rows = document.querySelectorAll('#fee-approval-table-body tr');
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells[0].textContent.trim() === id.toString()) {
-                cells[6].innerHTML = '<span class="badge badge-success">Đã duyệt</span>';
-                const actionCell = cells[7];
-                actionCell.innerHTML = '<button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(' + id + ')">👁️</button>';
-            }
-        });
+        // Update status in data
+        const feeItem = feeApprovalData.find(item => item.id === id);
+        if (feeItem) {
+            feeItem.status = 'approved';
+        }
+        
+        // Reload table
+        const semesterFilter = document.getElementById('fee-approval-semester-filter');
+        const classFilter = document.getElementById('fee-approval-class-filter');
+        if (semesterFilter && classFilter && semesterFilter.value && classFilter.value) {
+            loadFeeApprovalTable(semesterFilter.value, classFilter.value);
+        }
+        
         alert('Đã duyệt phí thành công!');
     }
 }
@@ -861,16 +879,19 @@ function rejectFee(id) {
     if (confirm('Bạn có chắc chắn muốn từ chối phí này?')) {
         const reason = prompt('Vui lòng nhập lý do từ chối:');
         if (reason) {
-            // Update status in table
-            const rows = document.querySelectorAll('#fee-approval-table-body tr');
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells[0].textContent.trim() === id.toString()) {
-                    cells[6].innerHTML = '<span class="badge badge-danger">Đã từ chối</span>';
-                    const actionCell = cells[7];
-                    actionCell.innerHTML = '<button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(' + id + ')">👁️</button>';
-                }
-            });
+            // Update status in data
+            const feeItem = feeApprovalData.find(item => item.id === id);
+            if (feeItem) {
+                feeItem.status = 'rejected';
+            }
+            
+            // Reload table
+            const semesterFilter = document.getElementById('fee-approval-semester-filter');
+            const classFilter = document.getElementById('fee-approval-class-filter');
+            if (semesterFilter && classFilter && semesterFilter.value && classFilter.value) {
+                loadFeeApprovalTable(semesterFilter.value, classFilter.value);
+            }
+            
             alert('Đã từ chối phí. Lý do: ' + reason);
         }
     }
@@ -892,6 +913,125 @@ function rejectFeeFromDetail() {
     }
 }
 
+// Fee Approval Data Storage
+let feeApprovalData = [
+    { id: 1, studentCode: 'STU001', studentName: 'Nguyễn Văn A', class: '10A1', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 550000, status: 'pending' },
+    { id: 2, studentCode: 'STU002', studentName: 'Trần Thị B', class: '10A1', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 600000, status: 'approved' },
+    { id: 3, studentCode: 'STU003', studentName: 'Lê Văn C', class: '10A2', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 520000, status: 'pending' },
+    { id: 4, studentCode: 'STU004', studentName: 'Phạm Thị D', class: '10A2', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 580000, status: 'pending' },
+    { id: 5, studentCode: 'STU005', studentName: 'Hoàng Văn E', class: '11A1', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 620000, status: 'approved' }
+];
+
+// Handle fee approval semester change
+function onFeeApprovalSemesterChange() {
+    const semesterFilter = document.getElementById('fee-approval-semester-filter');
+    const classFilter = document.getElementById('fee-approval-class-filter');
+    
+    if (classFilter) {
+        classFilter.disabled = !semesterFilter || !semesterFilter.value;
+        if (!semesterFilter || !semesterFilter.value) {
+            classFilter.value = '';
+        }
+    }
+    
+    checkAndLoadFeeApprovalTable();
+}
+
+// Handle fee approval class change
+function onFeeApprovalClassChange() {
+    checkAndLoadFeeApprovalTable();
+}
+
+// Check and load fee approval table
+function checkAndLoadFeeApprovalTable() {
+    const semesterFilter = document.getElementById('fee-approval-semester-filter');
+    const classFilter = document.getElementById('fee-approval-class-filter');
+    const tableBody = document.getElementById('fee-approval-table-body');
+    
+    if (!tableBody) return;
+    
+    const selectedSemester = semesterFilter ? semesterFilter.value : '';
+    const selectedClass = classFilter ? classFilter.value : '';
+    
+    const semesterMap = {
+        'semester1': 'Học kỳ 1',
+        'semester2': 'Học kỳ 2',
+        'semester3': 'Học kỳ 3'
+    };
+    
+    if (!selectedSemester || !selectedClass) {
+        const headerRow = document.querySelector('#fee-approval-table-body').closest('table').querySelector('thead tr');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 9;
+        if (!selectedSemester) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn kỳ học để hiển thị danh sách phí cần duyệt</td></tr>';
+        } else if (!selectedClass) {
+            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn lớp để hiển thị danh sách phí cần duyệt</td></tr>';
+        }
+        return;
+    }
+    
+    loadFeeApprovalTable(selectedSemester, selectedClass);
+}
+
+// Load fee approval table
+function loadFeeApprovalTable(semester, classValue) {
+    const semesterMap = {
+        'semester1': 'Học kỳ 1',
+        'semester2': 'Học kỳ 2',
+        'semester3': 'Học kỳ 3'
+    };
+    const semesterText = semesterMap[semester] || semester;
+    
+    // Filter data by semester and class
+    const filteredData = feeApprovalData.filter(item => {
+        return item.semester === semesterText && item.class === classValue;
+    });
+    
+    const tableBody = document.getElementById('fee-approval-table-body');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    if (filteredData.length === 0) {
+        const headerRow = document.querySelector('#fee-approval-table-body').closest('table').querySelector('thead tr');
+        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 9;
+        tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Không có dữ liệu phí cần duyệt cho lớp này</td></tr>';
+        return;
+    }
+    
+    filteredData.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        const statusBadge = item.status === 'approved' 
+            ? '<span class="badge badge-success">Đã duyệt</span>'
+            : item.status === 'rejected'
+            ? '<span class="badge badge-danger">Đã từ chối</span>'
+            : '<span class="badge badge-warning">Chờ duyệt</span>';
+        
+        let actionButtons = '<button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(' + item.id + ')">👁️</button>';
+        if (item.status === 'pending') {
+            actionButtons += '<button class="btn-icon btn-edit" style="background-color: rgba(40, 199, 111, 0.1);" title="Duyệt" onclick="approveFee(' + item.id + ')">✓</button>';
+            actionButtons += '<button class="btn-icon btn-delete" title="Từ chối" onclick="rejectFee(' + item.id + ')">✗</button>';
+        }
+        
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${item.studentCode}</td>
+            <td>${item.studentName}</td>
+            <td>${item.class}</td>
+            <td>${item.semester}</td>
+            <td>${item.period}</td>
+            <td>${item.amount.toLocaleString('vi-VN')} MMK</td>
+            <td>${statusBadge}</td>
+            <td class="action-cell">${actionButtons}</td>
+        `;
+        tr.setAttribute('data-fee-approval-id', item.id);
+        tableBody.appendChild(tr);
+    });
+    
+    // Apply status filter if selected
+    filterFeeApprovalList();
+}
+
 // Filter fee approval list
 function filterFeeApprovalList() {
     const statusFilter = document.getElementById('fee-approval-status-filter');
@@ -899,12 +1039,17 @@ function filterFeeApprovalList() {
     const rows = document.querySelectorAll('#fee-approval-table-body tr');
     
     rows.forEach(row => {
+        // Skip empty message rows
+        if (row.querySelector('td[colspan]')) {
+            return;
+        }
+        
         if (!selectedStatus) {
             row.style.display = '';
             return;
         }
         
-        const statusCell = row.querySelector('td:nth-child(7)');
+        const statusCell = row.querySelector('td:nth-child(8)');
         if (statusCell) {
             const statusText = statusCell.textContent.trim();
             let shouldShow = false;

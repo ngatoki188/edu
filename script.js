@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize navigation
     initNavigation();
+    initInvoiceTable();
 });
 
 // Navigation functionality
@@ -112,7 +113,8 @@ function updatePageTitle(moduleName) {
         'grade-input': 'Nhập điểm',
         'grade-approval': 'Duyệt điểm cho Admin',
         'schedule': 'Lịch học',
-        'attendance': 'Điểm danh'
+        'attendance': 'Điểm danh',
+        'fee-approval': 'Duyệt phí cho học sinh'
     };
     
     if (pageTitle && titles[moduleName]) {
@@ -155,8 +157,76 @@ function showAddPaymentPeriodForm() {
     showModal('add-payment-period-modal');
 }
 
+// Show Payment Config Module (from Payment Period module)
+function showPaymentConfigModule() {
+    const moduleContents = document.querySelectorAll('.module-content');
+    
+    // Hide all module contents
+    moduleContents.forEach(content => content.classList.remove('active'));
+    
+    // Show payment config module
+    const targetModule = document.getElementById('payment-config-module');
+    if (targetModule) {
+        targetModule.classList.add('active');
+    }
+    
+    // Update page title
+    updatePageTitle('payment-config');
+}
+
+// Show Payment Config for specific period
+function showPaymentConfigForPeriod(periodCode, periodName) {
+    // Store selected period info for filtering
+    window.selectedPaymentPeriod = {
+        code: periodCode,
+        name: periodName
+    };
+    
+    // Show payment config module
+    showPaymentConfigModule();
+    
+    // Filter payment config table by period (if needed)
+    // In a real app, this would filter the data
+    // For now, we just show all configs
+}
+
+// Show Payment Period Module (from Payment Config module)
+function showPaymentPeriodModule() {
+    const moduleContents = document.querySelectorAll('.module-content');
+    
+    // Hide all module contents
+    moduleContents.forEach(content => content.classList.remove('active'));
+    
+    // Show payment period module
+    const targetModule = document.getElementById('payment-period-module');
+    if (targetModule) {
+        targetModule.classList.add('active');
+    }
+    
+    // Update page title
+    updatePageTitle('payment-period');
+    
+    // Update nav item active state
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(nav => nav.classList.remove('active'));
+    const paymentPeriodNav = document.querySelector('.nav-item[data-module="payment-period"]');
+    if (paymentPeriodNav) {
+        paymentPeriodNav.classList.add('active');
+    }
+}
+
 // Payment Config functions
 function showAddPaymentConfigForm() {
+    // Display selected payment period if available
+    const periodDisplay = document.getElementById('payment-config-period-display');
+    if (periodDisplay && window.selectedPaymentPeriod) {
+        periodDisplay.textContent = window.selectedPaymentPeriod.name + ' (' + window.selectedPaymentPeriod.code + ')';
+        periodDisplay.style.color = '#2D2D2D';
+    } else if (periodDisplay) {
+        periodDisplay.textContent = '-- Chọn đợt thanh toán từ danh sách --';
+        periodDisplay.style.color = '#505050';
+    }
+    
     showModal('add-payment-config-modal');
 }
 
@@ -641,6 +711,200 @@ function filterApprovalList() {
         }
         
         const statusCell = row.querySelector('td:nth-child(8)');
+        if (statusCell) {
+            const statusText = statusCell.textContent.trim();
+            let shouldShow = false;
+            
+            if (selectedStatus === 'pending' && statusText.includes('Chờ duyệt')) {
+                shouldShow = true;
+            } else if (selectedStatus === 'approved' && statusText.includes('Đã duyệt')) {
+                shouldShow = true;
+            } else if (selectedStatus === 'rejected' && statusText.includes('Đã từ chối')) {
+                shouldShow = true;
+            }
+            
+            row.style.display = shouldShow ? '' : 'none';
+        }
+    });
+}
+
+// Fee Approval Functions
+let currentFeeApprovalId = null;
+
+// Show fee approval detail
+function showFeeApprovalDetail(id) {
+    currentFeeApprovalId = id;
+    
+    // Mock data - in real app, this would be an API call
+    const feeApprovalData = {
+        1: {
+            studentCode: 'STU001',
+            studentName: 'Nguyễn Văn A',
+            class: '10A1',
+            semester: 'Học kỳ 1',
+            period: 'First Semester Payment',
+            periodCode: 'PP001',
+            date: '15/01/2024',
+            status: 'pending',
+            note: 'Học sinh đã nộp đầy đủ các khoản phí theo đợt thanh toán',
+            feeItems: [
+                { name: 'Tuition Fee', amount: '500,000 MMK' },
+                { name: 'Library Fee', amount: '50,000 MMK' }
+            ],
+            total: '550,000 MMK'
+        },
+        2: {
+            studentCode: 'STU002',
+            studentName: 'Trần Thị B',
+            class: '10A2',
+            semester: 'Học kỳ 1',
+            period: 'First Semester Payment',
+            periodCode: 'PP001',
+            date: '16/01/2024',
+            status: 'approved',
+            note: 'Đã duyệt và xác nhận thanh toán',
+            feeItems: [
+                { name: 'Tuition Fee', amount: '500,000 MMK' },
+                { name: 'Library Fee', amount: '50,000 MMK' },
+                { name: 'Lab Fee', amount: '50,000 MMK' }
+            ],
+            total: '600,000 MMK'
+        },
+        3: {
+            studentCode: 'STU003',
+            studentName: 'Lê Văn C',
+            class: '11A1',
+            semester: 'Học kỳ 1',
+            period: 'First Semester Payment',
+            periodCode: 'PP001',
+            date: '17/01/2024',
+            status: 'pending',
+            note: 'Chờ admin duyệt',
+            feeItems: [
+                { name: 'Tuition Fee', amount: '500,000 MMK' },
+                { name: 'Library Fee', amount: '20,000 MMK' }
+            ],
+            total: '520,000 MMK'
+        }
+    };
+    
+    const data = feeApprovalData[id] || feeApprovalData[1];
+    
+    // Set detail information
+    document.getElementById('fee-approval-detail-student-code').textContent = data.studentCode;
+    document.getElementById('fee-approval-detail-student-name').textContent = data.studentName;
+    document.getElementById('fee-approval-detail-class').textContent = data.class;
+    document.getElementById('fee-approval-detail-semester').textContent = data.semester;
+    document.getElementById('fee-approval-detail-period').textContent = data.period;
+    document.getElementById('fee-approval-detail-period-code').textContent = data.periodCode;
+    document.getElementById('fee-approval-detail-date').textContent = data.date;
+    document.getElementById('fee-approval-detail-note').textContent = data.note;
+    document.getElementById('fee-approval-detail-total').textContent = data.total;
+    
+    // Set status
+    const statusElement = document.getElementById('fee-approval-detail-status');
+    const approveBtn = document.getElementById('fee-approval-approve-btn');
+    const rejectBtn = document.getElementById('fee-approval-reject-btn');
+    
+    if (data.status === 'approved') {
+        statusElement.innerHTML = '<span class="badge badge-success">Đã duyệt</span>';
+        if (approveBtn) approveBtn.style.display = 'none';
+        if (rejectBtn) rejectBtn.style.display = 'none';
+    } else if (data.status === 'rejected') {
+        statusElement.innerHTML = '<span class="badge badge-danger">Đã từ chối</span>';
+        if (approveBtn) approveBtn.style.display = 'none';
+        if (rejectBtn) rejectBtn.style.display = 'none';
+    } else {
+        statusElement.innerHTML = '<span class="badge badge-warning">Chờ duyệt</span>';
+        if (approveBtn) approveBtn.style.display = 'inline-flex';
+        if (rejectBtn) rejectBtn.style.display = 'inline-flex';
+    }
+    
+    // Build fee items table
+    const feeItemsTableBody = document.getElementById('fee-approval-detail-fee-items');
+    if (feeItemsTableBody) {
+        feeItemsTableBody.innerHTML = '';
+        
+        data.feeItems.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.amount}</td>
+            `;
+            feeItemsTableBody.appendChild(tr);
+        });
+    }
+    
+    showModal('fee-approval-detail-modal');
+}
+
+// Approve fee
+function approveFee(id) {
+    if (confirm('Bạn có chắc chắn muốn duyệt phí này?')) {
+        // Update status in table
+        const rows = document.querySelectorAll('#fee-approval-table-body tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells[0].textContent.trim() === id.toString()) {
+                cells[6].innerHTML = '<span class="badge badge-success">Đã duyệt</span>';
+                const actionCell = cells[7];
+                actionCell.innerHTML = '<button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(' + id + ')">👁️</button>';
+            }
+        });
+        alert('Đã duyệt phí thành công!');
+    }
+}
+
+// Reject fee
+function rejectFee(id) {
+    if (confirm('Bạn có chắc chắn muốn từ chối phí này?')) {
+        const reason = prompt('Vui lòng nhập lý do từ chối:');
+        if (reason) {
+            // Update status in table
+            const rows = document.querySelectorAll('#fee-approval-table-body tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells[0].textContent.trim() === id.toString()) {
+                    cells[6].innerHTML = '<span class="badge badge-danger">Đã từ chối</span>';
+                    const actionCell = cells[7];
+                    actionCell.innerHTML = '<button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(' + id + ')">👁️</button>';
+                }
+            });
+            alert('Đã từ chối phí. Lý do: ' + reason);
+        }
+    }
+}
+
+// Approve from detail modal
+function approveFeeFromDetail() {
+    if (currentFeeApprovalId) {
+        approveFee(currentFeeApprovalId);
+        closeModal('fee-approval-detail-modal');
+    }
+}
+
+// Reject from detail modal
+function rejectFeeFromDetail() {
+    if (currentFeeApprovalId) {
+        rejectFee(currentFeeApprovalId);
+        closeModal('fee-approval-detail-modal');
+    }
+}
+
+// Filter fee approval list
+function filterFeeApprovalList() {
+    const statusFilter = document.getElementById('fee-approval-status-filter');
+    const selectedStatus = statusFilter ? statusFilter.value : '';
+    const rows = document.querySelectorAll('#fee-approval-table-body tr');
+    
+    rows.forEach(row => {
+        if (!selectedStatus) {
+            row.style.display = '';
+            return;
+        }
+        
+        const statusCell = row.querySelector('td:nth-child(7)');
         if (statusCell) {
             const statusText = statusCell.textContent.trim();
             let shouldShow = false;
@@ -1568,26 +1832,63 @@ function showFeeItemDetail(cells) {
 
 // Payment Period Detail
 function showPaymentPeriodDetail(cells) {
-    document.getElementById('payment-period-detail-code').textContent = cells[1].textContent;
+    const periodCode = cells[1].textContent.trim();
+    
+    document.getElementById('payment-period-detail-code').textContent = periodCode;
     document.getElementById('payment-period-detail-semester').textContent = cells[2].textContent;
     document.getElementById('payment-period-detail-name-en').textContent = cells[3].textContent;
     document.getElementById('payment-period-detail-name-my').textContent = cells[4].textContent;
     document.getElementById('payment-period-detail-start-date').textContent = cells[5].textContent;
     document.getElementById('payment-period-detail-end-date').textContent = cells[6].textContent;
     
-    // Calculate days
-    try {
-        const startDateStr = cells[5].textContent.trim();
-        const endDateStr = cells[6].textContent.trim();
-        const startDate = new Date(startDateStr.split('/').reverse().join('-'));
-        const endDate = new Date(endDateStr.split('/').reverse().join('-'));
-        const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-        document.getElementById('payment-period-detail-days').textContent = days + ' ngày';
-    } catch (e) {
-        document.getElementById('payment-period-detail-days').textContent = 'N/A';
-    }
+    // Load and display fee items for this payment period
+    loadPaymentPeriodFeeItems(periodCode);
     
     showModal('payment-period-detail-modal');
+}
+
+// Load fee items for payment period
+function loadPaymentPeriodFeeItems(periodCode) {
+    // Mock data - in real app, this would be an API call filtered by periodCode
+    const paymentConfigs = {
+        'PP001': [
+            { feeItemName: 'Tuition Fee', feeItemCode: 'FEE001', note: 'Phí học phí hàng kỳ' },
+            { feeItemName: 'Library Fee', feeItemCode: 'FEE002', note: 'Phí thư viện' },
+            { feeItemName: 'Lab Fee', feeItemCode: 'FEE003', note: 'Phí phòng lab' }
+        ],
+        'PP002': [
+            { feeItemName: 'Tuition Fee', feeItemCode: 'FEE001', note: 'Phí học phí hàng kỳ' },
+            { feeItemName: 'Library Fee', feeItemCode: 'FEE002', note: 'Phí thư viện' }
+        ],
+        'PP003': [
+            { feeItemName: 'Tuition Fee', feeItemCode: 'FEE001', note: 'Phí học phí hàng kỳ' }
+        ]
+    };
+    
+    const feeItems = paymentConfigs[periodCode] || [];
+    const feeItemsTableBody = document.getElementById('payment-period-detail-fee-items');
+    const feeItemsEmpty = document.getElementById('payment-period-detail-fee-items-empty');
+    
+    if (feeItemsTableBody && feeItemsEmpty) {
+        if (feeItems.length === 0) {
+            feeItemsTableBody.innerHTML = '';
+            feeItemsEmpty.style.display = 'block';
+        } else {
+            feeItemsEmpty.style.display = 'none';
+            feeItemsTableBody.innerHTML = '';
+            
+            feeItems.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.feeItemName}</td>
+                    <td>${item.feeItemCode}</td>
+                    <td>${item.note || '-'}</td>
+                `;
+                feeItemsTableBody.appendChild(tr);
+            });
+        }
+    }
 }
 
 // Payment Config Detail
@@ -1618,6 +1919,9 @@ function showStudentFeeConfigDetail(cells) {
 
 // Debt Detail
 function showDebtDetail(cells) {
+    // Get debt ID from row
+    currentDebtId = parseInt(cells[0].textContent.trim()) || null;
+    
     document.getElementById('debt-detail-student-code').textContent = cells[1].textContent;
     document.getElementById('debt-detail-student-name').textContent = cells[2].textContent;
     document.getElementById('debt-detail-class').textContent = '10A1'; // Mock data
@@ -1636,35 +1940,625 @@ function showDebtDetail(cells) {
     document.getElementById('debt-detail-paid-amount').textContent = paidAmount.toLocaleString('vi-VN') + ' MMK';
     document.getElementById('debt-detail-debt-amount').textContent = debtText;
     
-    const paymentRate = totalAmount > 0 ? ((paidAmount / totalAmount) * 100).toFixed(2) : '0.00';
-    document.getElementById('debt-detail-payment-rate').textContent = paymentRate + '%';
-    
     // Get status from table (cells[6] is the status column)
     const statusText = cells[6].textContent.trim();
     const statusElement = document.getElementById('debt-detail-expiry-status');
-    if (statusText.includes('hết hạn') || statusText.includes('Đã')) {
+    if (statusText.includes('hết hạn') || statusText.includes('Đã hết')) {
         statusElement.innerHTML = '<span class="badge badge-danger">Đã hết hạn</span>';
+    } else if (statusText.includes('thanh toán đủ')) {
+        statusElement.innerHTML = '<span class="badge badge-success">Đã thanh toán đủ</span>';
     } else {
         statusElement.innerHTML = '<span class="badge badge-success">Chưa hết hạn</span>';
+    }
+    
+    // Display payment history
+    const paymentHistoryBody = document.getElementById('debt-payment-history');
+    const paymentHistoryEmpty = document.getElementById('debt-payment-history-empty');
+    
+    if (paymentHistoryBody && paymentHistoryEmpty) {
+        const history = paymentHistory[currentDebtId] || [];
+        
+        if (history.length === 0) {
+            paymentHistoryBody.innerHTML = '';
+            paymentHistoryEmpty.style.display = 'block';
+        } else {
+            paymentHistoryEmpty.style.display = 'none';
+            paymentHistoryBody.innerHTML = '';
+            
+            history.forEach((payment, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${payment.date}</td>
+                    <td>${payment.amount.toLocaleString('vi-VN')} MMK</td>
+                    <td>${payment.method}</td>
+                    <td>${payment.payerName || '-'}</td>
+                    <td>${payment.payerPhone || '-'}</td>
+                    <td>${payment.recorder || '-'}</td>
+                    <td>${payment.note || '-'}</td>
+                `;
+                paymentHistoryBody.appendChild(tr);
+            });
+        }
     }
     
     showModal('debt-detail-modal');
 }
 
+// Show debt detail from row button
+function showDebtDetailFromRow(button) {
+    const row = button.closest('tr');
+    const cells = row.querySelectorAll('td');
+    showDebtDetail(cells);
+}
+
+// Update Debt Functions
+let currentUpdateDebtId = null;
+
+// Show update debt modal
+function showUpdateDebtModal(id) {
+    currentUpdateDebtId = id;
+    
+    // Mock data - in real app, this would be an API call
+    const debtData = {
+        1: {
+            studentCode: 'STU001',
+            studentName: 'Nguyễn Văn A',
+            period: 'First Semester Payment',
+            feeItems: [
+                { id: 1, name: 'Tuition Fee', amount: 500000, paid: false },
+                { id: 2, name: 'Library Fee', amount: 50000, paid: true },
+                { id: 3, name: 'Lab Fee', amount: 100000, paid: false }
+            ]
+        },
+        2: {
+            studentCode: 'STU002',
+            studentName: 'Trần Thị B',
+            period: 'First Semester Payment',
+            feeItems: [
+                { id: 1, name: 'Tuition Fee', amount: 500000, paid: true },
+                { id: 2, name: 'Library Fee', amount: 50000, paid: true },
+                { id: 3, name: 'Lab Fee', amount: 100000, paid: false }
+            ]
+        },
+        3: {
+            studentCode: 'STU003',
+            studentName: 'Lê Văn C',
+            period: 'Second Semester Payment',
+            feeItems: [
+                { id: 1, name: 'Tuition Fee', amount: 400000, paid: true },
+                { id: 2, name: 'Library Fee', amount: 50000, paid: false }
+            ]
+        }
+    };
+    
+    const data = debtData[id] || debtData[1];
+    
+    // Set student information
+    document.getElementById('update-debt-student-code').textContent = data.studentCode;
+    document.getElementById('update-debt-student-name').textContent = data.studentName;
+    document.getElementById('update-debt-period').textContent = data.period;
+    
+    // Build fee items table
+    const feeItemsTableBody = document.getElementById('update-debt-fee-items');
+    if (feeItemsTableBody) {
+        feeItemsTableBody.innerHTML = '';
+        
+        data.feeItems.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            const paidStatus = item.paid ? '<span class="badge badge-success">Đã đóng</span>' : '<span class="badge badge-danger">Chưa đóng</span>';
+            tr.innerHTML = `
+                <td style="text-align: center;">
+                    <input type="checkbox" class="fee-checkbox" data-fee-id="${item.id}" data-amount="${item.amount}" ${item.paid ? 'checked' : ''} onchange="updateTotalSelected()">
+                </td>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${item.amount.toLocaleString('vi-VN')} MMK</td>
+                <td>${paidStatus}</td>
+            `;
+            feeItemsTableBody.appendChild(tr);
+        });
+    }
+    
+    // Update total selected
+    updateTotalSelected();
+    
+    // Reset select all checkbox
+    const selectAllCheckbox = document.getElementById('select-all-fees');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+    }
+    
+    showModal('update-debt-modal');
+}
+
+// Toggle all fees
+function toggleAllFees(checkbox) {
+    const feeCheckboxes = document.querySelectorAll('.fee-checkbox');
+    feeCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateTotalSelected();
+}
+
+// Update total selected amount
+function updateTotalSelected() {
+    const selectedCheckboxes = document.querySelectorAll('.fee-checkbox:checked');
+    let total = 0;
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const amount = parseInt(checkbox.getAttribute('data-amount')) || 0;
+        total += amount;
+        
+        // Update status in table row
+        const row = checkbox.closest('tr');
+        if (row) {
+            const statusCell = row.querySelector('td:last-child');
+            if (statusCell) {
+                statusCell.innerHTML = '<span class="badge badge-success">Đã đóng</span>';
+            }
+        }
+    });
+    
+    // Update unchecked items status
+    const uncheckedCheckboxes = document.querySelectorAll('.fee-checkbox:not(:checked)');
+    uncheckedCheckboxes.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        if (row) {
+            const statusCell = row.querySelector('td:last-child');
+            if (statusCell) {
+                statusCell.innerHTML = '<span class="badge badge-danger">Chưa đóng</span>';
+            }
+        }
+    });
+    
+    const totalElement = document.getElementById('update-debt-total-selected');
+    if (totalElement) {
+        totalElement.textContent = total.toLocaleString('vi-VN') + ' MMK';
+    }
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.fee-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-fees');
+    if (selectAllCheckbox && allCheckboxes.length > 0) {
+        const allChecked = Array.from(allCheckboxes).every(cb => cb.checked);
+        const someChecked = Array.from(allCheckboxes).some(cb => cb.checked);
+        selectAllCheckbox.checked = allChecked;
+        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+    }
+}
+
+// Save debt update
+function saveDebtUpdate() {
+    if (!currentUpdateDebtId) {
+        alert('Không tìm thấy thông tin khoản nợ');
+        return;
+    }
+    
+    const selectedCheckboxes = document.querySelectorAll('.fee-checkbox:checked');
+    if (selectedCheckboxes.length === 0) {
+        alert('Vui lòng chọn ít nhất một khoản phí đã đóng');
+        return;
+    }
+    
+    const selectedFeeIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-fee-id'));
+    const totalSelected = Array.from(selectedCheckboxes).reduce((sum, cb) => {
+        return sum + (parseInt(cb.getAttribute('data-amount')) || 0);
+    }, 0);
+    
+    if (confirm(`Bạn có chắc chắn muốn cập nhật ${selectedCheckboxes.length} khoản phí đã đóng? Tổng số tiền: ${totalSelected.toLocaleString('vi-VN')} MMK`)) {
+        // Update the debt table
+        const rows = document.querySelectorAll('#debt-table-body tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells[0].textContent.trim() === currentUpdateDebtId.toString()) {
+                // Get current debt amount
+                const debtText = cells[5].textContent;
+                const currentDebt = parseInt(debtText.replace(/[^\d]/g, '')) || 0;
+                const totalAmount = parseInt(cells[4].textContent.replace(/[^\d]/g, '')) || 0;
+                
+                // Calculate new debt (this is simplified - in real app, you'd need to calculate based on selected fees)
+                // For now, we'll just reduce the debt by the total selected amount
+                const newDebt = Math.max(0, currentDebt - totalSelected);
+                const newPaid = totalAmount - newDebt;
+                
+                // Update debt amount
+                if (newDebt === 0) {
+                    cells[5].innerHTML = '<span class="badge badge-success">0 MMK</span>';
+                } else {
+                    cells[5].innerHTML = '<span class="badge badge-danger">' + newDebt.toLocaleString('vi-VN') + ' MMK</span>';
+                }
+                
+                // Update status if debt is fully paid
+                if (newDebt === 0) {
+                    cells[6].innerHTML = '<span class="badge badge-success">Đã thanh toán đủ</span>';
+                }
+            }
+        });
+        
+        alert('Đã cập nhật khoản phí thành công!');
+        closeModal('update-debt-modal');
+    }
+}
+
+// Payment History Storage
+let paymentHistory = {
+    1: [
+        { id: 1, date: '10/01/2024', amount: 300000, method: 'Tiền mặt', payerName: 'Nguyễn Văn B', payerPhone: '0901234567', recorder: 'Admin', note: 'Thanh toán một phần' }
+    ],
+    2: [],
+    3: []
+};
+
+// Invoice Storage
+let invoices = [
+    { id: 1, code: 'INV001', studentCode: 'STU001', studentName: 'Nguyễn Văn A', period: 'First Semester Payment', requiredAmount: 1500000, paidAmount: 1000000, status: 'pending' },
+    { id: 2, code: 'INV002', studentCode: 'STU002', studentName: 'Trần Thị B', period: 'First Semester Payment', requiredAmount: 1500000, paidAmount: 1500000, status: 'approved' }
+];
+let nextInvoiceId = 3;
+let nextInvoiceCode = 3;
+
+// Record Payment Functions
+let currentRecordPaymentId = null;
+
+// Show record payment modal
+function showRecordPaymentModal(id) {
+    currentRecordPaymentId = id;
+    
+    // Mock data - in real app, this would be an API call
+    const debtData = {
+        1: {
+            studentCode: 'STU001',
+            studentName: 'Nguyễn Văn A',
+            period: 'First Semester Payment',
+            remainingDebt: 500000,
+            feeItems: [
+                { id: 1, name: 'Tuition Fee', amount: 500000, paid: 300000 },
+                { id: 2, name: 'Library Fee', amount: 50000, paid: 50000 },
+                { id: 3, name: 'Lab Fee', amount: 100000, paid: 0 }
+            ]
+        },
+        2: {
+            studentCode: 'STU002',
+            studentName: 'Trần Thị B',
+            period: 'First Semester Payment',
+            remainingDebt: 300000,
+            feeItems: [
+                { id: 1, name: 'Tuition Fee', amount: 500000, paid: 500000 },
+                { id: 2, name: 'Library Fee', amount: 50000, paid: 50000 },
+                { id: 3, name: 'Lab Fee', amount: 100000, paid: 70000 }
+            ]
+        },
+        3: {
+            studentCode: 'STU003',
+            studentName: 'Lê Văn C',
+            period: 'Second Semester Payment',
+            remainingDebt: 200000,
+            feeItems: [
+                { id: 1, name: 'Tuition Fee', amount: 400000, paid: 400000 },
+                { id: 2, name: 'Library Fee', amount: 50000, paid: 25000 }
+            ]
+        }
+    };
+    
+    const data = debtData[id] || debtData[1];
+    
+    // Set student information
+    document.getElementById('record-payment-student-code').textContent = data.studentCode;
+    document.getElementById('record-payment-student-name').textContent = data.studentName;
+    document.getElementById('record-payment-period').textContent = data.period;
+    document.getElementById('record-payment-remaining-debt').textContent = data.remainingDebt.toLocaleString('vi-VN') + ' MMK';
+    
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('record-payment-date').value = today;
+    
+    // Set recorder (get from user profile)
+    const recorderName = document.querySelector('.user-name') ? document.querySelector('.user-name').textContent.trim() : 'Admin';
+    document.getElementById('record-payment-recorder').value = recorderName;
+    
+    // Build fee items table (only show unpaid or partially paid fees)
+    const feeItemsTableBody = document.getElementById('record-payment-fee-items');
+    if (feeItemsTableBody) {
+        feeItemsTableBody.innerHTML = '';
+        
+        const unpaidFees = data.feeItems.filter(item => item.paid < item.amount);
+        
+        unpaidFees.forEach((item, index) => {
+            const remaining = item.amount - item.paid;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: center;">
+                    <input type="checkbox" class="payment-fee-checkbox" data-fee-id="${item.id}" data-amount="${remaining}" onchange="updatePaymentAmount()">
+                </td>
+                <td>${index + 1}</td>
+                <td>${item.name}</td>
+                <td>${remaining.toLocaleString('vi-VN')} MMK</td>
+                <td><span class="badge badge-warning">Còn thiếu ${remaining.toLocaleString('vi-VN')} MMK</span></td>
+            `;
+            feeItemsTableBody.appendChild(tr);
+        });
+        
+        if (unpaidFees.length === 0) {
+            feeItemsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #666;">Tất cả các khoản phí đã được thanh toán đủ</td></tr>';
+        }
+    }
+    
+    // Reset form
+    const form = document.getElementById('record-payment-form');
+    if (form) {
+        form.reset();
+        document.getElementById('record-payment-date').value = today;
+        // Keep recorder name after reset
+        document.getElementById('record-payment-recorder').value = recorderName;
+    }
+    
+    // Reset select all checkbox
+    const selectAllCheckbox = document.getElementById('select-all-payment-fees');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.checked = false;
+    }
+    
+    showModal('record-payment-modal');
+}
+
+// Show record payment modal from detail
+function showRecordPaymentModalFromDetail() {
+    if (currentDebtId) {
+        closeModal('debt-detail-modal');
+        showRecordPaymentModal(currentDebtId);
+    }
+}
+
+// Toggle all payment fees
+function toggleAllPaymentFees(checkbox) {
+    const feeCheckboxes = document.querySelectorAll('.payment-fee-checkbox');
+    feeCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updatePaymentAmount();
+}
+
+// Update payment amount from selected fees
+function updatePaymentAmount() {
+    const selectedCheckboxes = document.querySelectorAll('.payment-fee-checkbox:checked');
+    let total = 0;
+    
+    selectedCheckboxes.forEach(checkbox => {
+        const amount = parseInt(checkbox.getAttribute('data-amount')) || 0;
+        total += amount;
+    });
+    
+    const amountInput = document.getElementById('record-payment-amount');
+    if (amountInput) {
+        amountInput.value = total > 0 ? total : '';
+    }
+}
+
+// Save record payment
+function saveRecordPayment() {
+    if (!currentRecordPaymentId) {
+        alert('Không tìm thấy thông tin khoản nợ');
+        return;
+    }
+    
+    const form = document.getElementById('record-payment-form');
+    if (!form || !form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const paymentDate = document.getElementById('record-payment-date').value;
+    const paymentAmount = parseInt(document.getElementById('record-payment-amount').value) || 0;
+    const paymentMethod = document.getElementById('record-payment-method').value;
+    const payerName = document.getElementById('record-payment-payer-name').value.trim();
+    const payerPhone = document.getElementById('record-payment-payer-phone').value.trim();
+    const recorder = document.getElementById('record-payment-recorder').value.trim();
+    const paymentNote = document.getElementById('record-payment-note').value || '';
+    
+    if (paymentAmount <= 0) {
+        alert('Vui lòng nhập số tiền thanh toán hợp lệ');
+        return;
+    }
+    
+    if (!payerName) {
+        alert('Vui lòng nhập tên người nộp');
+        return;
+    }
+    
+    if (!payerPhone) {
+        alert('Vui lòng nhập số điện thoại người nộp');
+        return;
+    }
+    
+    const methodText = {
+        'cash': 'Tiền mặt',
+        'transfer': 'Chuyển khoản',
+        'card': 'Thẻ'
+    };
+    
+    // Get selected fee items
+    const selectedFees = Array.from(document.querySelectorAll('.payment-fee-checkbox:checked')).map(cb => ({
+        id: cb.getAttribute('data-fee-id'),
+        amount: parseInt(cb.getAttribute('data-amount'))
+    }));
+    
+    if (confirm(`Bạn có chắc chắn muốn ghi nhận thanh toán ${paymentAmount.toLocaleString('vi-VN')} MMK?`)) {
+        // Add to payment history
+        if (!paymentHistory[currentRecordPaymentId]) {
+            paymentHistory[currentRecordPaymentId] = [];
+        }
+        
+        const newPayment = {
+            id: Date.now(),
+            date: new Date(paymentDate).toLocaleDateString('vi-VN'),
+            amount: paymentAmount,
+            method: methodText[paymentMethod] || paymentMethod,
+            payerName: payerName,
+            payerPhone: payerPhone,
+            recorder: recorder,
+            note: paymentNote,
+            fees: selectedFees
+        };
+        
+        paymentHistory[currentRecordPaymentId].push(newPayment);
+        
+        // Create new invoice
+        const debtRow = Array.from(document.querySelectorAll('#debt-table-body tr')).find(row => {
+            const cells = row.querySelectorAll('td');
+            return cells[0].textContent.trim() === currentRecordPaymentId.toString();
+        });
+        
+        if (debtRow) {
+            const cells = debtRow.querySelectorAll('td');
+            const studentCode = cells[1].textContent.trim();
+            const studentName = cells[2].textContent.trim();
+            const period = cells[3].textContent.trim();
+            const totalAmount = parseInt(cells[4].textContent.replace(/[^\d]/g, '')) || 0;
+            
+            // Calculate total paid amount (including this payment)
+            const existingPaid = totalAmount - (parseInt(cells[5].textContent.replace(/[^\d]/g, '')) || 0);
+            const newPaidAmount = existingPaid + paymentAmount;
+            
+            // Generate invoice code
+            const invoiceCode = 'INV' + String(nextInvoiceCode).padStart(3, '0');
+            
+            // Create new invoice
+            const newInvoice = {
+                id: nextInvoiceId++,
+                code: invoiceCode,
+                studentCode: studentCode,
+                studentName: studentName,
+                period: period,
+                requiredAmount: totalAmount,
+                paidAmount: newPaidAmount,
+                status: newPaidAmount >= totalAmount ? 'approved' : 'pending',
+                paymentDate: newPayment.date,
+                payerName: payerName,
+                payerPhone: payerPhone,
+                recorder: recorder
+            };
+            
+            invoices.push(newInvoice);
+            nextInvoiceCode++;
+            
+            // Update invoice table
+            updateInvoiceTable();
+        }
+        
+        // Update debt table
+        const rows = document.querySelectorAll('#debt-table-body tr');
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells[0].textContent.trim() === currentRecordPaymentId.toString()) {
+                // Get current debt amount
+                const debtText = cells[5].textContent;
+                const currentDebt = parseInt(debtText.replace(/[^\d]/g, '')) || 0;
+                const totalAmount = parseInt(cells[4].textContent.replace(/[^\d]/g, '')) || 0;
+                
+                // Calculate new debt
+                const newDebt = Math.max(0, currentDebt - paymentAmount);
+                
+                // Update debt amount
+                if (newDebt === 0) {
+                    cells[5].innerHTML = '<span class="badge badge-success">0 MMK</span>';
+                    cells[6].innerHTML = '<span class="badge badge-success">Đã thanh toán đủ</span>';
+                } else {
+                    cells[5].innerHTML = '<span class="badge badge-danger">' + newDebt.toLocaleString('vi-VN') + ' MMK</span>';
+                }
+            }
+        });
+        
+        alert('Đã ghi nhận thanh toán thành công!');
+        closeModal('record-payment-modal');
+        
+        // If debt detail modal was open, refresh it
+        if (currentDebtId === currentRecordPaymentId) {
+            // Refresh debt detail to show new payment history
+            setTimeout(() => {
+                const row = document.querySelector(`#debt-table-body tr:has(td:first-child:contains("${currentRecordPaymentId}"))`);
+                if (!row) {
+                    const rows = document.querySelectorAll('#debt-table-body tr');
+                    rows.forEach(r => {
+                        const cells = r.querySelectorAll('td');
+                        if (cells[0].textContent.trim() === currentRecordPaymentId.toString()) {
+                            showDebtDetail(cells);
+                        }
+                    });
+                } else {
+                    const cells = row.querySelectorAll('td');
+                    showDebtDetail(cells);
+                }
+            }, 100);
+        }
+    }
+}
+
+// Update Invoice Table
+function updateInvoiceTable() {
+    const invoiceTableBody = document.getElementById('invoice-table-body');
+    if (!invoiceTableBody) return;
+    
+    invoiceTableBody.innerHTML = '';
+    
+    // Sort invoices by id descending (newest first)
+    const sortedInvoices = [...invoices].sort((a, b) => b.id - a.id);
+    
+    sortedInvoices.forEach((invoice, index) => {
+        const tr = document.createElement('tr');
+        const statusBadge = invoice.status === 'approved' 
+            ? '<span class="badge badge-success">Đã xác nhận</span>'
+            : '<span class="badge badge-warning">Chờ xác nhận</span>';
+        
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${invoice.code}</td>
+            <td>${invoice.studentCode}</td>
+            <td>${invoice.studentName}</td>
+            <td>${invoice.period}</td>
+            <td>${invoice.requiredAmount.toLocaleString('vi-VN')} MMK</td>
+            <td>${invoice.paidAmount.toLocaleString('vi-VN')} MMK</td>
+            <td>${statusBadge}</td>
+            <td class="action-cell">
+                <button class="btn-icon btn-view" title="Xem chi tiết" onclick="showInvoiceDetailFromRow(this)">👁️</button>
+            </td>
+        `;
+        tr.setAttribute('data-invoice-id', invoice.id);
+        invoiceTableBody.appendChild(tr);
+    });
+}
+
+// Initialize invoice table on page load
+function initInvoiceTable() {
+    updateInvoiceTable();
+}
+
+// Show invoice detail from row
+function showInvoiceDetailFromRow(button) {
+    const row = button.closest('tr');
+    const invoiceId = parseInt(row.getAttribute('data-invoice-id'));
+    if (invoiceId) {
+        const invoice = invoices.find(inv => inv.id === invoiceId);
+        if (invoice) {
+            showInvoiceDetail(invoice);
+        }
+    }
+}
+
 // Invoice Detail
-function showInvoiceDetail(cells) {
-    // Get data from table row
-    const invoiceCode = cells[1].textContent.trim();
-    const studentCode = cells[2].textContent.trim();
-    const studentName = cells[3].textContent.trim();
-    const period = cells[4].textContent.trim();
-    const requiredAmount = cells[5].textContent.trim();
-    const paidAmount = cells[6].textContent.trim();
-    const status = cells[7].textContent.trim();
+function showInvoiceDetail(invoice) {
+    // Get data from invoice object
+    const invoiceCode = invoice.code;
+    const studentCode = invoice.studentCode;
+    const studentName = invoice.studentName;
+    const period = invoice.period;
+    const requiredAmount = invoice.requiredAmount;
+    const paidAmount = invoice.paidAmount;
+    const status = invoice.status;
     
     // Set basic information
     document.getElementById('invoice-detail-code').textContent = invoiceCode;
-    document.getElementById('invoice-detail-date').textContent = new Date().toLocaleDateString('vi-VN');
+    document.getElementById('invoice-detail-date').textContent = invoice.paymentDate || new Date().toLocaleDateString('vi-VN');
     document.getElementById('invoice-detail-student-code').textContent = studentCode;
     document.getElementById('invoice-detail-student-name').textContent = studentName;
     document.getElementById('invoice-detail-class').textContent = '10A1'; // Mock data
@@ -1687,14 +2581,14 @@ function showInvoiceDetail(cells) {
     }
     
     // Calculate amounts
-    const requiredAmountNum = parseInt(requiredAmount.replace(/[^\d]/g, '')) || 0;
-    const paidAmountNum = parseInt(paidAmount.replace(/[^\d]/g, '')) || 0;
+    const requiredAmountNum = requiredAmount;
+    const paidAmountNum = paidAmount;
     const remainingAmount = requiredAmountNum - paidAmountNum;
     const paymentPercentage = requiredAmountNum > 0 ? ((paidAmountNum / requiredAmountNum) * 100).toFixed(2) : '0.00';
     
     // Set amounts
-    document.getElementById('invoice-detail-required-amount').textContent = requiredAmount;
-    document.getElementById('invoice-detail-total-paid').textContent = paidAmount;
+    document.getElementById('invoice-detail-required-amount').textContent = requiredAmountNum.toLocaleString('vi-VN') + ' MMK';
+    document.getElementById('invoice-detail-total-paid').textContent = paidAmountNum.toLocaleString('vi-VN') + ' MMK';
     document.getElementById('invoice-detail-total-remaining').textContent = remainingAmount.toLocaleString('vi-VN') + ' MMK';
     document.getElementById('invoice-detail-payment-percentage').textContent = paymentPercentage + '%';
     

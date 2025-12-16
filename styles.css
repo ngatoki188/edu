@@ -588,6 +588,20 @@ select.form-control:disabled {
     font-weight: 400;
 }
 
+/* Checkbox in table */
+.detail-table input[type="checkbox"],
+.data-table input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary-blue);
+}
+
+.detail-table input[type="checkbox"]:indeterminate {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
 .form-actions {
     display: flex;
     justify-content: flex-end;

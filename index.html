@@ -42,6 +42,10 @@
                         <span class="nav-icon">🧾</span>
                         <span class="nav-text">Quản lý Hóa đơn</span>
                     </li>
+                    <li class="nav-item" data-module="final-grade">
+                        <span class="nav-icon">📝</span>
+                        <span class="nav-text">Nhập điểm cuối kỳ</span>
+                    </li>
                     <li class="nav-item" data-module="grade">
                         <span class="nav-icon">📊</span>
                         <span class="nav-text">Tạo đầu điểm</span>
@@ -528,6 +532,107 @@
                     </div>
                 </div>
 
+                <!-- Final Grade Module - Nhập điểm cuối kỳ -->
+                <div class="module-content" id="final-grade-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Nhập điểm cuối kỳ</h3>
+                            <button class="btn btn-primary" onclick="showAddFinalGradeForm()">
+                                <span>+</span> Thêm điểm mới
+                            </button>
+                        </div>
+                    
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Mã học sinh</th>
+                                        <th>Tên học sinh</th>
+                                        <th>Môn học</th>
+                                        <th>Lớp học</th>
+                                        <th>Kỳ học</th>
+                                        <th>Điểm</th>
+                                        <th>Ghi chú</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="final-grade-table-body">
+                                    <!-- Data will be loaded dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Final Grade Form Modal -->
+                    <div class="modal" id="add-final-grade-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Thêm điểm cuối kỳ mới</h3>
+                                <button class="modal-close" onclick="closeModal('add-final-grade-modal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="final-grade-form">
+                                    <div class="form-group">
+                                        <label>Kỳ học <span class="required">*</span></label>
+                                        <select class="form-control" id="final-grade-semester" required>
+                                            <option value="">-- Chọn kỳ học --</option>
+                                            <option value="Học kỳ 1">Học kỳ 1</option>
+                                            <option value="Học kỳ 2">Học kỳ 2</option>
+                                            <option value="Học kỳ 3">Học kỳ 3</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Môn học <span class="required">*</span></label>
+                                        <select class="form-control" id="final-grade-subject" required>
+                                            <option value="">-- Chọn môn học --</option>
+                                            <option value="Toán">Toán</option>
+                                            <option value="Văn">Văn</option>
+                                            <option value="Anh">Anh</option>
+                                            <option value="Lý">Lý</option>
+                                            <option value="Hóa">Hóa</option>
+                                            <option value="Sinh">Sinh</option>
+                                            <option value="Sử">Sử</option>
+                                            <option value="Địa">Địa</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Lớp học <span class="required">*</span></label>
+                                        <select class="form-control" id="final-grade-class" required>
+                                            <option value="">-- Chọn lớp --</option>
+                                            <option value="10A1">10A1</option>
+                                            <option value="10A2">10A2</option>
+                                            <option value="11A1">11A1</option>
+                                            <option value="11A2">11A2</option>
+                                            <option value="12A1">12A1</option>
+                                            <option value="12A2">12A2</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Học sinh <span class="required">*</span></label>
+                                        <select class="form-control" id="final-grade-student" required>
+                                            <option value="">-- Chọn học sinh --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Điểm <span class="required">*</span></label>
+                                        <input type="number" class="form-control" id="final-grade-score" required min="0" max="10" step="0.1" placeholder="VD: 8.5">
+                                        <small class="form-text">Nhập điểm từ 0 đến 10</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ghi chú</label>
+                                        <textarea class="form-control" id="final-grade-note" rows="3" placeholder="Nhập ghi chú (nếu có)"></textarea>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-secondary" onclick="closeModal('add-final-grade-modal')">Hủy</button>
+                                        <button type="submit" class="btn btn-primary">Lưu</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Grade Module - Tạo đầu điểm -->
                 <div class="module-content" id="grade-module">
                     <div class="content-card">
@@ -672,12 +777,13 @@
                                         <th>Mã SV</th>
                                         <th>Họ và tên</th>
                                         <!-- Dynamic columns will be inserted here -->
+                                        <th>Điểm tổng kết</th>
                                         <th>Ghi chú</th>
                                     </tr>
                                 </thead>
                                     <tbody id="grade-input-table-body">
                                         <tr>
-                                            <td colspan="4" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                                            <td colspan="5" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
                                                 Vui lòng chọn kỳ học, môn học và lớp ở trên để hiển thị bảng nhập điểm
                                             </td>
                                         </tr>

@@ -110,6 +110,13 @@ function initNavigation() {
                     checkAndLoadFeeApprovalTable();
                 }, 100);
             }
+            
+            // Special handling for final-grade module
+            if (moduleName === 'final-grade') {
+                setTimeout(function() {
+                    loadFinalGradeTable();
+                }, 100);
+            }
         });
     });
 }
@@ -124,6 +131,7 @@ function updatePageTitle(moduleName) {
         'student-fee-config': 'Cấu hình khoản phí cho học sinh',
         'debt-management': 'Quản lý khoản nợ',
         'invoice-management': 'Quản lý Hóa đơn',
+        'final-grade': 'Nhập điểm cuối kỳ',
         'grade': 'Tạo đầu điểm',
         'grade-input': 'Nhập điểm',
         'grade-approval': 'Duyệt điểm cho Admin',
@@ -416,23 +424,26 @@ function loadGradeInputTable() {
     const headerRow = document.getElementById('grade-input-table-header');
     const existingHeaders = Array.from(headerRow.querySelectorAll('th'));
     
-    // Keep first 3 columns (#, Mã SV, Họ và tên) and last column (Ghi chú)
-    // Remove dynamic grade point columns (from index 3 to last-1)
+    // Keep first 3 columns (#, Mã SV, Họ và tên) and last 2 columns (Điểm tổng kết, Ghi chú)
+    // Remove dynamic grade point columns (from index 3 to last-2)
     const fixedColumns = 3; // #, Mã SV, Họ và tên
     const lastColumnIndex = existingHeaders.length - 1; // Ghi chú
+    const totalScoreColumnIndex = existingHeaders.length - 2; // Điểm tổng kết
     
     // Remove columns from right to left to avoid index shifting issues
-    for (let i = lastColumnIndex - 1; i >= fixedColumns; i--) {
+    // Keep last 2 columns (Điểm tổng kết and Ghi chú)
+    for (let i = totalScoreColumnIndex - 1; i >= fixedColumns; i--) {
         existingHeaders[i].remove();
     }
     
-    // Add dynamic columns
+    // Add dynamic columns (before "Điểm tổng kết" column)
+    const totalScoreHeader = headerRow.querySelector('th:nth-last-child(2)'); // Điểm tổng kết
     filteredPoints.forEach((point, index) => {
         const th = document.createElement('th');
         th.textContent = `${point.name} (${point.weight})`;
         th.setAttribute('data-grade-point', point.code);
         th.setAttribute('data-max-score', point.maxScore);
-        headerRow.insertBefore(th, headerRow.querySelector('th:last-child'));
+        headerRow.insertBefore(th, totalScoreHeader);
     });
     
     // Build table body
@@ -512,6 +523,18 @@ function loadGradeInputTable() {
             tr.appendChild(td);
         });
         
+        // Add total score column (before notes)
+        const totalScoreTd = document.createElement('td');
+        totalScoreTd.className = 'grade-input-cell';
+        totalScoreTd.innerHTML = `<input type="number" 
+                                         class="total-score-input" 
+                                         data-student-code="${student.code}"
+                                         min="0" 
+                                         max="10" 
+                                         step="0.1" 
+                                         placeholder="0.0">`;
+        tr.appendChild(totalScoreTd);
+        
         // Add notes column (always last)
         const notesTd = document.createElement('td');
         notesTd.className = 'grade-input-cell';
@@ -536,6 +559,7 @@ function saveGrades() {
         const cells = row.querySelectorAll('td');
         const studentCode = cells[1].textContent.trim();
         const gradeInputs = row.querySelectorAll('.grade-input');
+        const totalScoreInput = row.querySelector('.total-score-input');
         const notesInput = row.querySelector('.notes-input');
         
         const grades = {};
@@ -547,6 +571,7 @@ function saveGrades() {
         students.push({
             code: studentCode,
             grades: grades,
+            totalScore: totalScoreInput ? parseFloat(totalScoreInput.value) || 0 : 0,
             notes: notesInput ? notesInput.value : ''
         });
     });
@@ -2791,4 +2816,270 @@ function confirmInvoice() {
         // In real app, you would update the database here
         // Then refresh the table to show updated status
     }
+}
+
+// ==================== Final Grade Module - Nhập điểm cuối kỳ ====================
+
+// Mock data for final grades
+let finalGradeData = {
+    1: { id: 1, studentCode: 'STU001', studentName: 'Nguyễn Văn A', subject: 'Toán', class: '10A1', semester: 'Học kỳ 1', score: 8.5, note: 'Điểm tốt' },
+    2: { id: 2, studentCode: 'STU002', studentName: 'Trần Thị B', subject: 'Văn', class: '10A2', semester: 'Học kỳ 1', score: 7.0, note: 'Cần cải thiện' },
+    3: { id: 3, studentCode: 'STU003', studentName: 'Lê Văn C', subject: 'Anh', class: '10A1', semester: 'Học kỳ 1', score: 9.0, note: 'Xuất sắc' },
+    4: { id: 4, studentCode: 'STU004', studentName: 'Phạm Thị D', subject: 'Toán', class: '11A1', semester: 'Học kỳ 2', score: 8.0, note: '' },
+    5: { id: 5, studentCode: 'STU005', studentName: 'Hoàng Văn E', subject: 'Lý', class: '11A2', semester: 'Học kỳ 2', score: 7.5, note: 'Ổn định' }
+};
+
+// Mock data for students by class
+let studentsByClassForGrade = {
+    '10A1': [
+        { code: 'STU001', name: 'Nguyễn Văn A' },
+        { code: 'STU003', name: 'Lê Văn C' },
+        { code: 'STU006', name: 'Vũ Thị F' }
+    ],
+    '10A2': [
+        { code: 'STU002', name: 'Trần Thị B' },
+        { code: 'STU007', name: 'Đỗ Văn G' }
+    ],
+    '11A1': [
+        { code: 'STU004', name: 'Phạm Thị D' },
+        { code: 'STU008', name: 'Bùi Văn H' }
+    ],
+    '11A2': [
+        { code: 'STU005', name: 'Hoàng Văn E' },
+        { code: 'STU009', name: 'Ngô Thị I' }
+    ],
+    '12A1': [
+        { code: 'STU010', name: 'Lý Văn J' },
+        { code: 'STU011', name: 'Trương Thị K' }
+    ],
+    '12A2': [
+        { code: 'STU012', name: 'Đinh Văn L' },
+        { code: 'STU013', name: 'Võ Thị M' }
+    ]
+};
+
+let nextFinalGradeId = 6;
+
+// Load final grade table
+function loadFinalGradeTable() {
+    const tableBody = document.getElementById('final-grade-table-body');
+    if (!tableBody) return;
+
+    tableBody.innerHTML = '';
+
+    const grades = Object.values(finalGradeData);
+    
+    if (grades.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Chưa có dữ liệu điểm cuối kỳ.</td></tr>`;
+        return;
+    }
+
+    grades.forEach((grade, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${grade.studentCode}</td>
+            <td>${grade.studentName}</td>
+            <td>${grade.subject}</td>
+            <td>${grade.class}</td>
+            <td>${grade.semester}</td>
+            <td><strong>${grade.score}</strong></td>
+            <td>${grade.note || '-'}</td>
+            <td class="action-cell">
+                <button class="btn-icon btn-edit" title="Sửa" onclick="editFinalGrade(${grade.id})">✏️</button>
+                <button class="btn-icon btn-delete" title="Xóa" onclick="deleteFinalGrade(${grade.id})">🗑️</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+// Show add final grade form
+function showAddFinalGradeForm() {
+    // Reset form
+    const form = document.getElementById('final-grade-form');
+    form.reset();
+    form.removeAttribute('data-editing-id');
+    document.getElementById('final-grade-student').innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    
+    showModal('add-final-grade-modal');
+}
+
+// Handle class change to load students
+document.addEventListener('DOMContentLoaded', function() {
+    const classSelect = document.getElementById('final-grade-class');
+    const studentSelect = document.getElementById('final-grade-student');
+    
+    if (classSelect && studentSelect) {
+        classSelect.addEventListener('change', function() {
+            const selectedClass = this.value;
+            studentSelect.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+            
+            if (selectedClass && studentsByClassForGrade[selectedClass]) {
+                studentsByClassForGrade[selectedClass].forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.code;
+                    option.textContent = `${student.code} - ${student.name}`;
+                    studentSelect.appendChild(option);
+                });
+            }
+        });
+    }
+});
+
+// Save final grade
+function saveFinalGrade() {
+    const semester = document.getElementById('final-grade-semester').value;
+    const subject = document.getElementById('final-grade-subject').value;
+    const classValue = document.getElementById('final-grade-class').value;
+    const studentCode = document.getElementById('final-grade-student').value;
+    const score = parseFloat(document.getElementById('final-grade-score').value);
+    const note = document.getElementById('final-grade-note').value;
+
+    if (!semester || !subject || !classValue || !studentCode || isNaN(score)) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        return;
+    }
+
+    if (score < 0 || score > 10) {
+        alert('Điểm phải từ 0 đến 10!');
+        return;
+    }
+
+    // Find student name
+    const students = studentsByClassForGrade[classValue] || [];
+    const student = students.find(s => s.code === studentCode);
+    const studentName = student ? student.name : '';
+
+    // Create new grade entry
+    const newGrade = {
+        id: nextFinalGradeId++,
+        studentCode: studentCode,
+        studentName: studentName,
+        subject: subject,
+        class: classValue,
+        semester: semester,
+        score: score,
+        note: note
+    };
+
+    finalGradeData[newGrade.id] = newGrade;
+
+    // Reload table
+    loadFinalGradeTable();
+
+    // Close modal
+    closeModal('add-final-grade-modal');
+
+    alert('Thêm điểm cuối kỳ thành công!');
+}
+
+// Edit final grade
+function editFinalGrade(id) {
+    const grade = finalGradeData[id];
+    if (!grade) return;
+
+    // Populate form
+    document.getElementById('final-grade-semester').value = grade.semester;
+    document.getElementById('final-grade-subject').value = grade.subject;
+    document.getElementById('final-grade-class').value = grade.class;
+    
+    // Load students for the class
+    const classSelect = document.getElementById('final-grade-class');
+    const studentSelect = document.getElementById('final-grade-student');
+    studentSelect.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    
+    if (studentsByClassForGrade[grade.class]) {
+        studentsByClassForGrade[grade.class].forEach(student => {
+            const option = document.createElement('option');
+            option.value = student.code;
+            option.textContent = `${student.code} - ${student.name}`;
+            if (student.code === grade.studentCode) {
+                option.selected = true;
+            }
+            studentSelect.appendChild(option);
+        });
+    }
+    
+    document.getElementById('final-grade-score').value = grade.score;
+    document.getElementById('final-grade-note').value = grade.note || '';
+
+    // Store editing ID
+    document.getElementById('final-grade-form').dataset.editingId = id;
+
+    showModal('add-final-grade-modal');
+}
+
+// Delete final grade
+function deleteFinalGrade(id) {
+    if (confirm('Bạn có chắc chắn muốn xóa điểm này?')) {
+        delete finalGradeData[id];
+        loadFinalGradeTable();
+        alert('Đã xóa điểm thành công!');
+    }
+}
+
+// Update form submit to handle edit
+document.addEventListener('DOMContentLoaded', function() {
+    const finalGradeForm = document.getElementById('final-grade-form');
+    if (finalGradeForm) {
+        finalGradeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const editingId = this.dataset.editingId;
+            if (editingId) {
+                updateFinalGrade(editingId);
+            } else {
+                saveFinalGrade();
+            }
+        });
+    }
+});
+
+// Update final grade
+function updateFinalGrade(id) {
+    const semester = document.getElementById('final-grade-semester').value;
+    const subject = document.getElementById('final-grade-subject').value;
+    const classValue = document.getElementById('final-grade-class').value;
+    const studentCode = document.getElementById('final-grade-student').value;
+    const score = parseFloat(document.getElementById('final-grade-score').value);
+    const note = document.getElementById('final-grade-note').value;
+
+    if (!semester || !subject || !classValue || !studentCode || isNaN(score)) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        return;
+    }
+
+    if (score < 0 || score > 10) {
+        alert('Điểm phải từ 0 đến 10!');
+        return;
+    }
+
+    // Find student name
+    const students = studentsByClassForGrade[classValue] || [];
+    const student = students.find(s => s.code === studentCode);
+    const studentName = student ? student.name : '';
+
+    // Update grade entry
+    finalGradeData[id] = {
+        id: id,
+        studentCode: studentCode,
+        studentName: studentName,
+        subject: subject,
+        class: classValue,
+        semester: semester,
+        score: score,
+        note: note
+    };
+
+    // Reload table
+    loadFinalGradeTable();
+
+    // Close modal
+    closeModal('add-final-grade-modal');
+
+    // Clear editing ID
+    document.getElementById('final-grade-form').removeAttribute('data-editing-id');
+
+    alert('Cập nhật điểm cuối kỳ thành công!');
 }

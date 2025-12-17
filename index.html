@@ -467,32 +467,17 @@
                                     <option value="12A2">12A2</option>
                                 </select>
                                 <div id="student-fee-config-status-badge" style="margin-left: 8px;"></div>
-                                <button class="btn btn-primary" id="student-fee-config-save-btn" onclick="saveStudentFeeConfig()">
-                                    <span>💾</span> Lưu cấu hình
+                                <button class="btn btn-primary" id="student-fee-config-save-btn" onclick="studentFeeConfigPrimaryAction()">
+                                    <span>💾</span> Lưu bản ghi
                                 </button>
-                                <button class="btn btn-primary" id="student-fee-config-approve-btn" style="display:none;" onclick="approveStudentFeeConfig()">
-                                    Chấp nhận
-                                </button>
-                                <button class="btn btn-danger" id="student-fee-config-reject-btn" style="display:none;" onclick="openRejectStudentFeeConfigModal()">
+                                <button class="btn btn-danger" id="student-fee-config-reject-btn" style="display:none;" onclick="rejectStudentFeeConfig()">
                                     Từ chối
                                 </button>
                             </div>
                         </div>
-
-                        <div id="student-fee-config-feedback-box" style="display:none; margin-top: 10px;">
-                            <div id="student-fee-config-feedback-inner" style="padding: 10px 12px; border: 1px solid #E3E6EC; border-radius: 8px; background: #FFF6F6; color: #2D2D2D;">
-                                <div>
-                                    <strong>Lý do từ chối:</strong>
-                                    <span id="student-fee-config-reject-reason-text"></span>
-                                </div>
-                                <div id="student-fee-config-resubmit-row" style="display:none; margin-top: 6px;">
-                                    <strong>Xác nhận đã chỉnh sửa:</strong>
-                                    <span id="student-fee-config-resubmit-text"></span>
-                                </div>
-                                <div id="student-fee-config-needs-revise" style="margin-top: 6px; color:#505050; display:none;">
-                                    (Cần biên soạn lại)
-                                </div>
-                            </div>
+                        
+                        <div style="margin-top: 10px;">
+                            <input class="form-control" id="student-fee-config-top-note-input" type="text" placeholder="Nhập ghi chú (tuỳ chọn)..." />
                         </div>
                         
                         <div class="table-container">
@@ -514,46 +499,6 @@
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reject Student Fee Config Modal -->
-                <div class="modal" id="student-fee-config-reject-modal">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>Nhập lý do từ chối</h3>
-                            <button class="modal-close" onclick="closeModal('student-fee-config-reject-modal')">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label>Lý do từ chối <span class="required">*</span></label>
-                                <textarea class="form-control" id="student-fee-config-reject-reason-input" rows="4" placeholder="Nhập lý do từ chối..."></textarea>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-secondary" onclick="closeModal('student-fee-config-reject-modal')">Hủy</button>
-                                <button type="button" class="btn btn-danger" onclick="submitRejectStudentFeeConfig()">Xác nhận từ chối</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resubmit Student Fee Config Modal -->
-                <div class="modal" id="student-fee-config-resubmit-modal">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>Xác nhận đã chỉnh sửa</h3>
-                            <button class="modal-close" onclick="closeModal('student-fee-config-resubmit-modal')">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <label>Lời xác nhận <span class="required">*</span></label>
-                                <textarea class="form-control" id="student-fee-config-resubmit-note-input" rows="4" placeholder="VD: Tôi đã chỉnh sửa theo góp ý và gửi lại để duyệt."></textarea>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-secondary" onclick="closeModal('student-fee-config-resubmit-modal')">Hủy</button>
-                                <button type="button" class="btn btn-primary" onclick="submitResubmitStudentFeeConfig()">Gửi lại duyệt</button>
-                            </div>
                         </div>
                     </div>
                 </div>

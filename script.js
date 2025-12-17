@@ -80,6 +80,13 @@ function initNavigation() {
                     checkAndLoadStudentFeeTable();
                 }, 100);
             }
+
+            // Special handling for fee-config module
+            if (moduleName === 'fee-config') {
+                setTimeout(function() {
+                    loadFeeConfigTable();
+                }, 100);
+            }
             
             // Special handling for attendance module
             if (moduleName === 'attendance') {
@@ -93,21 +100,6 @@ function initNavigation() {
                     }
                     
                     checkAndLoadAttendanceTable();
-                }, 100);
-            }
-            
-            // Special handling for fee-approval module
-            if (moduleName === 'fee-approval') {
-                setTimeout(function() {
-                    // Initialize dropdown states
-                    const semesterFilter = document.getElementById('fee-approval-semester-filter');
-                    const classFilter = document.getElementById('fee-approval-class-filter');
-                    
-                    if (classFilter) {
-                        classFilter.disabled = !semesterFilter || !semesterFilter.value;
-                    }
-                    
-                    checkAndLoadFeeApprovalTable();
                 }, 100);
             }
             
@@ -128,6 +120,7 @@ function updatePageTitle(moduleName) {
         'feeitem': 'Quản lý Khoản phí',
         'payment-period': 'Quản lý Đợt thanh toán',
         'payment-config': 'Cấu hình Đợt thanh toán',
+        'fee-config': 'Cấu hình phí',
         'student-fee-config': 'Cấu hình khoản phí cho học sinh',
         'debt-management': 'Quản lý khoản nợ',
         'invoice-management': 'Quản lý Hóa đơn',
@@ -136,8 +129,7 @@ function updatePageTitle(moduleName) {
         'grade-input': 'Nhập điểm',
         'grade-approval': 'Duyệt điểm cho Admin',
         'schedule': 'Lịch học',
-        'attendance': 'Điểm danh',
-        'fee-approval': 'Duyệt phí cho học sinh'
+        'attendance': 'Điểm danh'
     };
     
     if (pageTitle && titles[moduleName]) {
@@ -745,330 +737,6 @@ function filterApprovalList() {
     const rows = document.querySelectorAll('#grade-approval-table-body tr');
     
     rows.forEach(row => {
-        if (!selectedStatus) {
-            row.style.display = '';
-            return;
-        }
-        
-        const statusCell = row.querySelector('td:nth-child(8)');
-        if (statusCell) {
-            const statusText = statusCell.textContent.trim();
-            let shouldShow = false;
-            
-            if (selectedStatus === 'pending' && statusText.includes('Chờ duyệt')) {
-                shouldShow = true;
-            } else if (selectedStatus === 'approved' && statusText.includes('Đã duyệt')) {
-                shouldShow = true;
-            } else if (selectedStatus === 'rejected' && statusText.includes('Đã từ chối')) {
-                shouldShow = true;
-            }
-            
-            row.style.display = shouldShow ? '' : 'none';
-        }
-    });
-}
-
-// Fee Approval Functions
-let currentFeeApprovalId = null;
-
-// Show fee approval detail
-function showFeeApprovalDetail(id) {
-    currentFeeApprovalId = id;
-    
-    // Mock data - in real app, this would be an API call
-    const feeApprovalData = {
-        1: {
-            studentCode: 'STU001',
-            studentName: 'Nguyễn Văn A',
-            class: '10A1',
-            semester: 'Học kỳ 1',
-            period: 'First Semester Payment',
-            periodCode: 'PP001',
-            date: '15/01/2024',
-            status: 'pending',
-            note: 'Học sinh đã nộp đầy đủ các khoản phí theo đợt thanh toán',
-            feeItems: [
-                { name: 'Tuition Fee', amount: '500,000 MMK' },
-                { name: 'Library Fee', amount: '50,000 MMK' }
-            ],
-            total: '550,000 MMK'
-        },
-        2: {
-            studentCode: 'STU002',
-            studentName: 'Trần Thị B',
-            class: '10A2',
-            semester: 'Học kỳ 1',
-            period: 'First Semester Payment',
-            periodCode: 'PP001',
-            date: '16/01/2024',
-            status: 'approved',
-            note: 'Đã duyệt và xác nhận thanh toán',
-            feeItems: [
-                { name: 'Tuition Fee', amount: '500,000 MMK' },
-                { name: 'Library Fee', amount: '50,000 MMK' },
-                { name: 'Lab Fee', amount: '50,000 MMK' }
-            ],
-            total: '600,000 MMK'
-        },
-        3: {
-            studentCode: 'STU003',
-            studentName: 'Lê Văn C',
-            class: '11A1',
-            semester: 'Học kỳ 1',
-            period: 'First Semester Payment',
-            periodCode: 'PP001',
-            date: '17/01/2024',
-            status: 'pending',
-            note: 'Chờ admin duyệt',
-            feeItems: [
-                { name: 'Tuition Fee', amount: '500,000 MMK' },
-                { name: 'Library Fee', amount: '20,000 MMK' }
-            ],
-            total: '520,000 MMK'
-        }
-    };
-    
-    const data = feeApprovalData[id] || feeApprovalData[1];
-    
-    // Set detail information
-    document.getElementById('fee-approval-detail-student-code').textContent = data.studentCode;
-    document.getElementById('fee-approval-detail-student-name').textContent = data.studentName;
-    document.getElementById('fee-approval-detail-class').textContent = data.class;
-    document.getElementById('fee-approval-detail-semester').textContent = data.semester;
-    document.getElementById('fee-approval-detail-period').textContent = data.period;
-    document.getElementById('fee-approval-detail-period-code').textContent = data.periodCode;
-    document.getElementById('fee-approval-detail-date').textContent = data.date;
-    document.getElementById('fee-approval-detail-note').textContent = data.note;
-    document.getElementById('fee-approval-detail-total').textContent = data.total;
-    
-    // Set status
-    const statusElement = document.getElementById('fee-approval-detail-status');
-    const approveBtn = document.getElementById('fee-approval-approve-btn');
-    const rejectBtn = document.getElementById('fee-approval-reject-btn');
-    
-    if (data.status === 'approved') {
-        statusElement.innerHTML = '<span class="badge badge-success">Đã duyệt</span>';
-        if (approveBtn) approveBtn.style.display = 'none';
-        if (rejectBtn) rejectBtn.style.display = 'none';
-    } else if (data.status === 'rejected') {
-        statusElement.innerHTML = '<span class="badge badge-danger">Đã từ chối</span>';
-        if (approveBtn) approveBtn.style.display = 'none';
-        if (rejectBtn) rejectBtn.style.display = 'none';
-    } else {
-        statusElement.innerHTML = '<span class="badge badge-warning">Chờ duyệt</span>';
-        if (approveBtn) approveBtn.style.display = 'inline-flex';
-        if (rejectBtn) rejectBtn.style.display = 'inline-flex';
-    }
-    
-    // Build fee items table
-    const feeItemsTableBody = document.getElementById('fee-approval-detail-fee-items');
-    if (feeItemsTableBody) {
-        feeItemsTableBody.innerHTML = '';
-        
-        data.feeItems.forEach((item, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.name}</td>
-                <td>${item.amount}</td>
-            `;
-            feeItemsTableBody.appendChild(tr);
-        });
-    }
-    
-    showModal('fee-approval-detail-modal');
-}
-
-// Approve fee
-function approveFee(id) {
-    if (confirm('Bạn có chắc chắn muốn duyệt phí này?')) {
-        // Update status in data
-        const feeItem = feeApprovalData.find(item => item.id === id);
-        if (feeItem) {
-            feeItem.status = 'approved';
-        }
-        
-        // Reload table
-        const semesterFilter = document.getElementById('fee-approval-semester-filter');
-        const classFilter = document.getElementById('fee-approval-class-filter');
-        if (semesterFilter && classFilter && semesterFilter.value && classFilter.value) {
-            loadFeeApprovalTable(semesterFilter.value, classFilter.value);
-        }
-        
-        alert('Đã duyệt phí thành công!');
-    }
-}
-
-// Reject fee
-function rejectFee(id) {
-    if (confirm('Bạn có chắc chắn muốn từ chối phí này?')) {
-        const reason = prompt('Vui lòng nhập lý do từ chối:');
-        if (reason) {
-            // Update status in data
-            const feeItem = feeApprovalData.find(item => item.id === id);
-            if (feeItem) {
-                feeItem.status = 'rejected';
-            }
-            
-            // Reload table
-            const semesterFilter = document.getElementById('fee-approval-semester-filter');
-            const classFilter = document.getElementById('fee-approval-class-filter');
-            if (semesterFilter && classFilter && semesterFilter.value && classFilter.value) {
-                loadFeeApprovalTable(semesterFilter.value, classFilter.value);
-            }
-            
-            alert('Đã từ chối phí. Lý do: ' + reason);
-        }
-    }
-}
-
-// Approve from detail modal
-function approveFeeFromDetail() {
-    if (currentFeeApprovalId) {
-        approveFee(currentFeeApprovalId);
-        closeModal('fee-approval-detail-modal');
-    }
-}
-
-// Reject from detail modal
-function rejectFeeFromDetail() {
-    if (currentFeeApprovalId) {
-        rejectFee(currentFeeApprovalId);
-        closeModal('fee-approval-detail-modal');
-    }
-}
-
-// Fee Approval Data Storage
-let feeApprovalData = [
-    { id: 1, studentCode: 'STU001', studentName: 'Nguyễn Văn A', class: '10A1', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 550000, status: 'pending' },
-    { id: 2, studentCode: 'STU002', studentName: 'Trần Thị B', class: '10A1', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 600000, status: 'approved' },
-    { id: 3, studentCode: 'STU003', studentName: 'Lê Văn C', class: '10A2', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 520000, status: 'pending' },
-    { id: 4, studentCode: 'STU004', studentName: 'Phạm Thị D', class: '10A2', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 580000, status: 'pending' },
-    { id: 5, studentCode: 'STU005', studentName: 'Hoàng Văn E', class: '11A1', semester: 'Học kỳ 1', period: 'First Semester Payment', amount: 620000, status: 'approved' }
-];
-
-// Handle fee approval semester change
-function onFeeApprovalSemesterChange() {
-    const semesterFilter = document.getElementById('fee-approval-semester-filter');
-    const classFilter = document.getElementById('fee-approval-class-filter');
-    
-    if (classFilter) {
-        classFilter.disabled = !semesterFilter || !semesterFilter.value;
-        if (!semesterFilter || !semesterFilter.value) {
-            classFilter.value = '';
-        }
-    }
-    
-    checkAndLoadFeeApprovalTable();
-}
-
-// Handle fee approval class change
-function onFeeApprovalClassChange() {
-    checkAndLoadFeeApprovalTable();
-}
-
-// Check and load fee approval table
-function checkAndLoadFeeApprovalTable() {
-    const semesterFilter = document.getElementById('fee-approval-semester-filter');
-    const classFilter = document.getElementById('fee-approval-class-filter');
-    const tableBody = document.getElementById('fee-approval-table-body');
-    
-    if (!tableBody) return;
-    
-    const selectedSemester = semesterFilter ? semesterFilter.value : '';
-    const selectedClass = classFilter ? classFilter.value : '';
-    
-    const semesterMap = {
-        'semester1': 'Học kỳ 1',
-        'semester2': 'Học kỳ 2',
-        'semester3': 'Học kỳ 3'
-    };
-    
-    if (!selectedSemester || !selectedClass) {
-        const headerRow = document.querySelector('#fee-approval-table-body').closest('table').querySelector('thead tr');
-        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 9;
-        if (!selectedSemester) {
-            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn kỳ học để hiển thị danh sách phí cần duyệt</td></tr>';
-        } else if (!selectedClass) {
-            tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Vui lòng chọn lớp để hiển thị danh sách phí cần duyệt</td></tr>';
-        }
-        return;
-    }
-    
-    loadFeeApprovalTable(selectedSemester, selectedClass);
-}
-
-// Load fee approval table
-function loadFeeApprovalTable(semester, classValue) {
-    const semesterMap = {
-        'semester1': 'Học kỳ 1',
-        'semester2': 'Học kỳ 2',
-        'semester3': 'Học kỳ 3'
-    };
-    const semesterText = semesterMap[semester] || semester;
-    
-    // Filter data by semester and class
-    const filteredData = feeApprovalData.filter(item => {
-        return item.semester === semesterText && item.class === classValue;
-    });
-    
-    const tableBody = document.getElementById('fee-approval-table-body');
-    if (!tableBody) return;
-    
-    tableBody.innerHTML = '';
-    
-    if (filteredData.length === 0) {
-        const headerRow = document.querySelector('#fee-approval-table-body').closest('table').querySelector('thead tr');
-        const colCount = headerRow ? headerRow.querySelectorAll('th').length : 9;
-        tableBody.innerHTML = '<tr><td colspan="' + colCount + '" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">Không có dữ liệu phí cần duyệt cho lớp này</td></tr>';
-        return;
-    }
-    
-    filteredData.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        const statusBadge = item.status === 'approved' 
-            ? '<span class="badge badge-success">Đã duyệt</span>'
-            : item.status === 'rejected'
-            ? '<span class="badge badge-danger">Đã từ chối</span>'
-            : '<span class="badge badge-warning">Chờ duyệt</span>';
-        
-        let actionButtons = '<button class="btn-icon btn-view" title="Xem chi tiết" onclick="showFeeApprovalDetail(' + item.id + ')">👁️</button>';
-        if (item.status === 'pending') {
-            actionButtons += '<button class="btn-icon btn-edit" style="background-color: rgba(40, 199, 111, 0.1);" title="Duyệt" onclick="approveFee(' + item.id + ')">✓</button>';
-            actionButtons += '<button class="btn-icon btn-delete" title="Từ chối" onclick="rejectFee(' + item.id + ')">✗</button>';
-        }
-        
-        tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.studentCode}</td>
-            <td>${item.studentName}</td>
-            <td>${item.class}</td>
-            <td>${item.semester}</td>
-            <td>${item.period}</td>
-            <td>${item.amount.toLocaleString('vi-VN')} MMK</td>
-            <td>${statusBadge}</td>
-            <td class="action-cell">${actionButtons}</td>
-        `;
-        tr.setAttribute('data-fee-approval-id', item.id);
-        tableBody.appendChild(tr);
-    });
-    
-    // Apply status filter if selected
-    filterFeeApprovalList();
-}
-
-// Filter fee approval list
-function filterFeeApprovalList() {
-    const statusFilter = document.getElementById('fee-approval-status-filter');
-    const selectedStatus = statusFilter ? statusFilter.value : '';
-    const rows = document.querySelectorAll('#fee-approval-table-body tr');
-    
-    rows.forEach(row => {
-        // Skip empty message rows
-        if (row.querySelector('td[colspan]')) {
-            return;
-        }
-        
         if (!selectedStatus) {
             row.style.display = '';
             return;
@@ -1880,6 +1548,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Fee Config form
+    const feeConfigForm = document.getElementById('fee-config-form');
+    if (feeConfigForm) {
+        feeConfigForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveFeeConfig();
+        });
+    }
+
     // Grade Point form
     const gradePointForm = document.getElementById('grade-point-form');
     if (gradePointForm) {
@@ -1928,6 +1605,437 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// =========================
+// Fee Config Module (Cấu hình phí)
+// =========================
+
+let feeConfigData = [
+    { id: 1, semester: 'semester1', periodCode: 'PP001', classCode: '10A1', status: 'Đang soạn' },
+    { id: 2, semester: 'semester1', periodCode: 'PP002', classCode: '10A2', status: 'Chờ xác nhận' },
+    { id: 3, semester: 'semester2', periodCode: 'PP003', classCode: '11A1', status: 'Xác nhận' },
+    { id: 4, semester: 'semester3', periodCode: 'PP004', classCode: '12A2', status: 'Từ chối' }
+];
+let feeConfigNextId = 5;
+
+function getSemesterLabel(semesterKey) {
+    const map = {
+        semester1: 'Học kỳ 1',
+        semester2: 'Học kỳ 2',
+        semester3: 'Học kỳ 3'
+    };
+    return map[semesterKey] || semesterKey || '-';
+}
+
+function findPaymentPeriod(semesterKey, periodCode) {
+    const periods = (typeof paymentPeriodsData !== 'undefined' && paymentPeriodsData[semesterKey]) ? paymentPeriodsData[semesterKey] : [];
+    return periods.find(p => p.code === periodCode) || null;
+}
+
+function getFeeConfigStatusBadge(status) {
+    const s = status || 'Đang soạn';
+    let badgeClass = 'badge-primary';
+    if (s === 'Chờ xác nhận') badgeClass = 'badge-warning';
+    if (s === 'Xác nhận') badgeClass = 'badge-success';
+    if (s === 'Từ chối') badgeClass = 'badge-danger';
+    return `<span class="badge ${badgeClass}">${s}</span>`;
+}
+
+function loadFeeConfigTable() {
+    const tableBody = document.getElementById('fee-config-table-body');
+    if (!tableBody) return;
+
+    const statusFilterEl = document.getElementById('fee-config-status-filter');
+    const selectedStatus = statusFilterEl ? statusFilterEl.value : '';
+    const filtered = selectedStatus ? feeConfigData.filter(x => (x.status || 'Đang soạn') === selectedStatus) : feeConfigData;
+
+    if (!filtered || filtered.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                    ${selectedStatus ? 'Không có cấu hình phí phù hợp với trạng thái đã chọn.' : 'Chưa có cấu hình phí. Nhấn “Tạo cấu hình mới” để thêm.'}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = '';
+    filtered.forEach((cfg, idx) => {
+        const tr = document.createElement('tr');
+        const period = findPaymentPeriod(cfg.semester, cfg.periodCode);
+        const periodName = period ? period.name : (cfg.periodCode || '-');
+
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${cfg.classCode || '-'}</td>
+            <td>${periodName}</td>
+            <td>${getSemesterLabel(cfg.semester)}</td>
+            <td>${getFeeConfigStatusBadge(cfg.status)}</td>
+            <td class="action-cell">
+                <button class="btn-icon" title="Xem chi tiết" onclick="showFeeConfigDetail(${cfg.id})">👁️</button>
+                <button class="btn-icon" title="Sửa" onclick="editFeeConfig(${cfg.id})">✏️</button>
+                <button class="btn-icon" title="Xóa" onclick="deleteFeeConfig(${cfg.id})">🗑️</button>
+                <button class="btn-icon" title="Cấu hình" onclick="configureFeeConfig(${cfg.id})">⚙️</button>
+                <button class="btn-icon" title="Chấp nhận" onclick="approveFeeConfig(${cfg.id})">✅</button>
+                <button class="btn-icon" title="Từ chối" onclick="rejectFeeConfig(${cfg.id})">⛔</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
+
+function filterFeeConfigList() {
+    loadFeeConfigTable();
+}
+
+function showAddFeeConfigForm() {
+    const title = document.getElementById('fee-config-modal-title');
+    if (title) title.textContent = 'Tạo cấu hình mới';
+
+    const idEl = document.getElementById('fee-config-id');
+    const semesterEl = document.getElementById('fee-config-semester');
+    const periodEl = document.getElementById('fee-config-period');
+    const classEl = document.getElementById('fee-config-class');
+    const statusGroup = document.getElementById('fee-config-status-group');
+    const statusEl = document.getElementById('fee-config-status');
+
+    if (idEl) idEl.value = '';
+    if (semesterEl) semesterEl.value = '';
+    if (classEl) classEl.value = '';
+    if (statusEl) statusEl.value = 'Đang soạn';
+    if (statusGroup) statusGroup.style.display = 'none';
+
+    if (periodEl) {
+        periodEl.innerHTML = '<option value="">-- Chọn đợt thanh toán --</option>';
+        periodEl.disabled = true;
+        periodEl.value = '';
+    }
+
+    showModal('add-fee-config-modal');
+}
+
+function onFeeConfigSemesterChange() {
+    const semesterEl = document.getElementById('fee-config-semester');
+    const periodEl = document.getElementById('fee-config-period');
+    if (!semesterEl || !periodEl) return;
+
+    const semesterKey = semesterEl.value;
+    periodEl.innerHTML = '<option value="">-- Chọn đợt thanh toán --</option>';
+    periodEl.disabled = !semesterKey;
+
+    if (!semesterKey) return;
+
+    const periods = (typeof paymentPeriodsData !== 'undefined' && paymentPeriodsData[semesterKey]) ? paymentPeriodsData[semesterKey] : [];
+    periods.forEach(period => {
+        const option = document.createElement('option');
+        option.value = period.code;
+        option.textContent = period.name;
+        periodEl.appendChild(option);
+    });
+}
+
+function saveFeeConfig() {
+    const idEl = document.getElementById('fee-config-id');
+    const semesterEl = document.getElementById('fee-config-semester');
+    const periodEl = document.getElementById('fee-config-period');
+    const classEl = document.getElementById('fee-config-class');
+    const statusEl = document.getElementById('fee-config-status');
+    const statusGroup = document.getElementById('fee-config-status-group');
+
+    const id = idEl && idEl.value ? parseInt(idEl.value, 10) : null;
+    const semester = semesterEl ? semesterEl.value : '';
+    const periodCode = periodEl ? periodEl.value : '';
+    const classCode = classEl ? classEl.value : '';
+
+    if (!semester || !periodCode || !classCode) {
+        alert('Vui lòng chọn đủ: Kỳ học, Đợt thanh toán, Lớp.');
+        return;
+    }
+
+    // Prevent duplicates
+    const existed = feeConfigData.find(x =>
+        x.semester === semester &&
+        x.periodCode === periodCode &&
+        x.classCode === classCode &&
+        (id === null || x.id !== id)
+    );
+    if (existed) {
+        alert('Cấu hình này đã tồn tại (trùng Kỳ học + Đợt thanh toán + Lớp).');
+        return;
+    }
+
+    if (id !== null) {
+        const cfg = feeConfigData.find(x => x.id === id);
+        if (!cfg) {
+            alert('Không tìm thấy cấu hình để cập nhật.');
+            return;
+        }
+        cfg.semester = semester;
+        cfg.periodCode = periodCode;
+        cfg.classCode = classCode;
+        // Chỉ cho đổi trạng thái khi đang ở chế độ sửa (statusGroup hiển thị)
+        if (statusGroup && statusGroup.style.display !== 'none' && statusEl) {
+            cfg.status = statusEl.value || cfg.status || 'Đang soạn';
+        }
+        alert('Đã cập nhật cấu hình phí thành công!');
+    } else {
+        feeConfigData.unshift({
+            id: feeConfigNextId++,
+            semester,
+            periodCode,
+            classCode,
+            status: 'Đang soạn'
+        });
+        alert('Đã tạo cấu hình phí mới thành công!');
+    }
+
+    closeModal('add-fee-config-modal');
+    const form = document.getElementById('fee-config-form');
+    if (form) form.reset();
+    loadFeeConfigTable();
+}
+
+function editFeeConfig(id) {
+    const cfg = feeConfigData.find(x => x.id === id);
+    if (!cfg) return;
+
+    const title = document.getElementById('fee-config-modal-title');
+    if (title) title.textContent = 'Sửa cấu hình phí';
+
+    const idEl = document.getElementById('fee-config-id');
+    const semesterEl = document.getElementById('fee-config-semester');
+    const periodEl = document.getElementById('fee-config-period');
+    const classEl = document.getElementById('fee-config-class');
+    const statusGroup = document.getElementById('fee-config-status-group');
+    const statusEl = document.getElementById('fee-config-status');
+
+    if (idEl) idEl.value = String(cfg.id);
+    if (semesterEl) semesterEl.value = cfg.semester || '';
+
+    // Populate periods based on semester then select
+    onFeeConfigSemesterChange();
+    if (periodEl) {
+        periodEl.disabled = false;
+        periodEl.value = cfg.periodCode || '';
+    }
+    if (classEl) classEl.value = cfg.classCode || '';
+
+    if (statusGroup) statusGroup.style.display = 'block';
+    if (statusEl) statusEl.value = cfg.status || 'Đang soạn';
+
+    showModal('add-fee-config-modal');
+}
+
+function deleteFeeConfig(id) {
+    const cfg = feeConfigData.find(x => x.id === id);
+    if (!cfg) return;
+    if (!confirm('Bạn có chắc chắn muốn xóa cấu hình này?')) return;
+
+    feeConfigData = feeConfigData.filter(x => x.id !== id);
+    loadFeeConfigTable();
+    alert('Đã xóa cấu hình phí thành công!');
+}
+
+function showFeeConfigDetail(id) {
+    const cfg = feeConfigData.find(x => x.id === id);
+    if (!cfg) return;
+
+    const semesterLabel = getSemesterLabel(cfg.semester);
+    const period = findPaymentPeriod(cfg.semester, cfg.periodCode);
+    const periodName = period ? period.name : (cfg.periodCode || '-');
+
+    document.getElementById('fee-config-detail-semester').textContent = semesterLabel;
+    document.getElementById('fee-config-detail-period').textContent = periodName;
+    document.getElementById('fee-config-detail-class').textContent = cfg.classCode || '-';
+    document.getElementById('fee-config-detail-status').innerHTML = getFeeConfigStatusBadge(cfg.status);
+
+    renderFeeConfigDetailTable(cfg);
+
+    // Store current detail id for configure action
+    window.__feeConfigDetailId = id;
+
+    showModal('fee-config-detail-modal');
+}
+
+function getStudentsByClassForFeeConfig(classCode) {
+    // Same mock students list as student fee config module
+    const studentsByClass = {
+        '10A1': [
+            { code: '3120410024', lastName: 'Trương Hồ', firstName: 'An' },
+            { code: '3121560010', lastName: 'Nguyễn Quốc', firstName: 'Anh' },
+            { code: '3120480015', lastName: 'Trần Phạm Ngọc', firstName: 'Ánh' },
+            { code: '3120410048', lastName: 'Huỳnh Gia', firstName: 'Bảo' }
+        ],
+        '10A2': [
+            { code: '3120410025', lastName: 'Lê Văn', firstName: 'Cường' },
+            { code: '3121560011', lastName: 'Phạm Thị', firstName: 'Dung' },
+            { code: '3120480016', lastName: 'Hoàng Văn', firstName: 'Đức' }
+        ],
+        '11A1': [
+            { code: '3120410026', lastName: 'Vũ Thị', firstName: 'Hoa' },
+            { code: '3121560012', lastName: 'Đặng Văn', firstName: 'Hùng' }
+        ],
+        '11A2': [
+            { code: '3120410027', lastName: 'Bùi Thị', firstName: 'Lan' },
+            { code: '3121560013', lastName: 'Trịnh Văn', firstName: 'Minh' }
+        ],
+        '12A1': [
+            { code: '3120410028', lastName: 'Ngô Thị', firstName: 'Nga' },
+            { code: '3121560014', lastName: 'Lý Văn', firstName: 'Phong' }
+        ],
+        '12A2': [
+            { code: '3120410029', lastName: 'Đỗ Thị', firstName: 'Quỳnh' },
+            { code: '3121560015', lastName: 'Võ Văn', firstName: 'Sơn' }
+        ]
+    };
+    return studentsByClass[classCode] || [];
+}
+
+function renderFeeConfigDetailTable(cfg) {
+    const headerRow = document.getElementById('fee-config-detail-table-header');
+    const tableBody = document.getElementById('fee-config-detail-table-body');
+    if (!headerRow || !tableBody) return;
+
+    // Reset header to fixed columns (#, Mã SV, Họ và tên, Ghi chú)
+    const existingHeaders = Array.from(headerRow.querySelectorAll('th'));
+    const fixedColumns = 3;
+    const lastColumnIndex = existingHeaders.length - 1; // Ghi chú
+    for (let i = lastColumnIndex - 1; i >= fixedColumns; i--) {
+        existingHeaders[i].remove();
+    }
+
+    // Resolve payment period + fee items for the selected config
+    const period = findPaymentPeriod(cfg.semester, cfg.periodCode);
+    if (!period) {
+        const colCount = headerRow.querySelectorAll('th').length;
+        tableBody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; padding: 30px; color:#505050; font-size:14px;">Không tìm thấy đợt thanh toán</td></tr>`;
+        return;
+    }
+
+    const feeItemCodes = period.feeItems || [];
+    const feeItems = feeItemCodes.map(code => (typeof feeItemsData !== 'undefined' ? feeItemsData[code] : null)).filter(Boolean);
+
+    if (feeItems.length === 0) {
+        const colCount = headerRow.querySelectorAll('th').length;
+        tableBody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; padding: 30px; color:#505050; font-size:14px;">Đợt thanh toán này chưa có khoản phí nào. Vui lòng cấu hình khoản phí cho đợt thanh toán trước.</td></tr>`;
+        return;
+    }
+
+    // Add dynamic fee item columns
+    feeItems.forEach(item => {
+        const th = document.createElement('th');
+        th.textContent = `${item.nameEn} (${item.nameMy})`;
+        th.setAttribute('data-fee-item', item.code);
+        headerRow.insertBefore(th, headerRow.querySelector('th:last-child'));
+    });
+
+    // Build body (read-only preview)
+    const students = getStudentsByClassForFeeConfig(cfg.classCode);
+    if (students.length === 0) {
+        const colCount = headerRow.querySelectorAll('th').length;
+        tableBody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; padding: 30px; color:#505050; font-size:14px;">Lớp này chưa có học sinh</td></tr>`;
+        return;
+    }
+
+    tableBody.innerHTML = '';
+    students.forEach((student, idx) => {
+        const tr = document.createElement('tr');
+        const fullName = `${student.lastName} ${student.firstName}`;
+
+        tr.innerHTML = `
+            <td>${idx + 1}</td>
+            <td>${student.code}</td>
+            <td>${fullName}</td>
+        `;
+
+        feeItems.forEach(item => {
+            const td = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'form-control';
+            input.placeholder = 'Nhập số tiền';
+            input.style.width = '100%';
+            input.style.minWidth = '120px';
+            input.disabled = true;
+            td.appendChild(input);
+            tr.appendChild(td);
+        });
+
+        const notesTd = document.createElement('td');
+        const notesInput = document.createElement('input');
+        notesInput.type = 'text';
+        notesInput.className = 'form-control';
+        notesInput.placeholder = 'Ghi chú';
+        notesInput.style.width = '100%';
+        notesInput.disabled = true;
+        notesTd.appendChild(notesInput);
+        tr.appendChild(notesTd);
+
+        tableBody.appendChild(tr);
+    });
+}
+
+function configureFeeConfigFromDetail() {
+    const id = window.__feeConfigDetailId;
+    if (!id) return;
+    closeModal('fee-config-detail-modal');
+    configureFeeConfig(id);
+}
+
+function configureFeeConfig(id) {
+    const cfg = feeConfigData.find(x => x.id === id);
+    if (!cfg) return;
+    openStudentFeeConfigWithFilters(cfg.semester, cfg.periodCode, cfg.classCode);
+}
+
+function approveFeeConfig(id) {
+    const cfg = feeConfigData.find(x => x.id === id);
+    if (!cfg) return;
+    if (!confirm('Bạn có chắc chắn muốn chấp nhận cấu hình này?')) return;
+    cfg.status = 'Xác nhận';
+    loadFeeConfigTable();
+    alert('Đã chấp nhận cấu hình phí!');
+}
+
+function rejectFeeConfig(id) {
+    const cfg = feeConfigData.find(x => x.id === id);
+    if (!cfg) return;
+    if (!confirm('Bạn có chắc chắn muốn từ chối cấu hình này?')) return;
+    cfg.status = 'Từ chối';
+    loadFeeConfigTable();
+    alert('Đã từ chối cấu hình phí!');
+}
+
+function openStudentFeeConfigWithFilters(semesterKey, periodCode, classCode) {
+    const navItem = document.querySelector('.nav-item[data-module="student-fee-config"]');
+    if (navItem) navItem.click();
+
+    setTimeout(() => {
+        const semesterFilter = document.getElementById('student-fee-semester-filter');
+        const periodFilter = document.getElementById('student-fee-period-filter');
+        const classFilter = document.getElementById('student-fee-class-filter');
+
+        if (semesterFilter) {
+            semesterFilter.value = semesterKey || '';
+            onStudentFeeSemesterChange();
+        }
+
+        setTimeout(() => {
+            if (periodFilter) {
+                periodFilter.value = periodCode || '';
+                onStudentFeePeriodChange();
+            }
+
+            setTimeout(() => {
+                if (classFilter) {
+                    classFilter.value = classCode || '';
+                    onStudentFeeClassChange();
+                }
+            }, 60);
+        }, 80);
+    }, 160);
+}
 
 // Action button handlers (View, Edit, Delete, Active)
 document.addEventListener('click', function(e) {

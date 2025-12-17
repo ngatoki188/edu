@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -26,13 +26,13 @@
                         <span class="nav-icon">📅</span>
                         <span class="nav-text">Đợt thanh toán</span>
                     </li>
+                    <li class="nav-item" data-module="fee-config">
+                        <span class="nav-icon">🧩</span>
+                        <span class="nav-text">Cấu hình phí</span>
+                    </li>
                     <li class="nav-item" data-module="student-fee-config">
                         <span class="nav-icon">👨‍🎓</span>
                         <span class="nav-text">Cấu hình khoản phí cho học sinh</span>
-                    </li>
-                    <li class="nav-item" data-module="fee-approval">
-                        <span class="nav-icon">💵</span>
-                        <span class="nav-text">Duyệt phí cho học sinh</span>
                     </li>
                     <li class="nav-item" data-module="debt-management">
                         <span class="nav-icon">💳</span>
@@ -339,6 +339,163 @@
                                         <button type="submit" class="btn btn-primary">Lưu</button>
                                     </div>
                                 </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fee Config Module -->
+                <div class="module-content" id="fee-config-module">
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Cấu hình phí</h3>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <select class="form-control" id="fee-config-status-filter" style="width: 180px;" onchange="filterFeeConfigList()">
+                                    <option value="">-- Tất cả trạng thái --</option>
+                                    <option value="Đang soạn">Đang soạn</option>
+                                    <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                    <option value="Xác nhận">Xác nhận</option>
+                                    <option value="Từ chối">Từ chối</option>
+                                </select>
+                                <button class="btn btn-primary" onclick="showAddFeeConfigForm()">
+                                    <span>+</span> Tạo cấu hình mới
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table" id="fee-config-table">
+                                <thead>
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Lớp</th>
+                                        <th>Đợt thanh toán</th>
+                                        <th>Kỳ học</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fee-config-table-body">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
+                                            Chưa có cấu hình phí. Nhấn “Tạo cấu hình mới” để thêm.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add/Edit Fee Config Modal -->
+                    <div class="modal" id="add-fee-config-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 id="fee-config-modal-title">Tạo cấu hình mới</h3>
+                                <button class="modal-close" onclick="closeModal('add-fee-config-modal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="fee-config-form">
+                                    <input type="hidden" id="fee-config-id" value="">
+                                    <div class="form-group">
+                                        <label>Chọn Kỳ học <span class="required">*</span></label>
+                                        <select class="form-control" id="fee-config-semester" required onchange="onFeeConfigSemesterChange()">
+                                            <option value="">-- Chọn kỳ học --</option>
+                                            <option value="semester1">Học kỳ 1</option>
+                                            <option value="semester2">Học kỳ 2</option>
+                                            <option value="semester3">Học kỳ 3</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Chọn đợt thanh toán <span class="required">*</span></label>
+                                        <select class="form-control" id="fee-config-period" required disabled>
+                                            <option value="">-- Chọn đợt thanh toán --</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Chọn lớp <span class="required">*</span></label>
+                                        <select class="form-control" id="fee-config-class" required>
+                                            <option value="">-- Chọn lớp --</option>
+                                            <option value="10A1">10A1</option>
+                                            <option value="10A2">10A2</option>
+                                            <option value="11A1">11A1</option>
+                                            <option value="11A2">11A2</option>
+                                            <option value="12A1">12A1</option>
+                                            <option value="12A2">12A2</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="fee-config-status-group" style="display:none;">
+                                        <label>Trạng thái</label>
+                                        <select class="form-control" id="fee-config-status">
+                                            <option value="Đang soạn">Đang soạn</option>
+                                            <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                            <option value="Xác nhận">Xác nhận</option>
+                                            <option value="Từ chối">Từ chối</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-actions">
+                                        <button type="button" class="btn btn-secondary" onclick="closeModal('add-fee-config-modal')">Hủy</button>
+                                        <button type="submit" class="btn btn-primary">Lưu</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fee Config Detail Modal -->
+                    <div class="modal" id="fee-config-detail-modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3>Chi tiết cấu hình phí</h3>
+                                <button class="modal-close" onclick="closeModal('fee-config-detail-modal')">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="detail-grid">
+                                    <div class="detail-item">
+                                        <div class="detail-label">Kỳ học</div>
+                                        <div class="detail-value" id="fee-config-detail-semester">-</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Đợt thanh toán</div>
+                                        <div class="detail-value" id="fee-config-detail-period">-</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Lớp</div>
+                                        <div class="detail-value" id="fee-config-detail-class">-</div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <div class="detail-label">Trạng thái</div>
+                                        <div class="detail-value" id="fee-config-detail-status">-</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-top: 16px; font-weight: 600; color: #2D2D2D;">
+                                    Bảng cấu hình phí
+                                </div>
+                                <div class="table-container" style="margin-top: 10px;">
+                                    <table class="data-table" id="fee-config-detail-table">
+                                        <thead>
+                                            <tr id="fee-config-detail-table-header">
+                                                <th>#</th>
+                                                <th>Mã SV</th>
+                                                <th>Họ và tên</th>
+                                                <!-- Dynamic columns will be inserted here -->
+                                                <th>Ghi chú</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="fee-config-detail-table-body">
+                                            <tr>
+                                                <td colspan="4" style="text-align: center; padding: 30px; color: #505050; font-size: 14px;">
+                                                    Đang tải dữ liệu bảng cấu hình...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="form-actions" style="margin-top: 16px;">
+                                    <button type="button" class="btn btn-secondary" onclick="closeModal('fee-config-detail-modal')">Đóng</button>
+                                    <button type="button" class="btn btn-primary" onclick="configureFeeConfigFromDetail()">Cấu hình</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1116,163 +1273,6 @@
                     </div>
                 </div>
 
-                <!-- Fee Approval Module -->
-                <div class="module-content" id="fee-approval-module">
-                    <div class="content-card">
-                        <div class="card-header">
-                            <h3 class="card-title">Duyệt phí cho học sinh</h3>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <select class="form-control" id="fee-approval-semester-filter" style="width: 180px;" onchange="onFeeApprovalSemesterChange()">
-                                    <option value="">-- Chọn kỳ học --</option>
-                                    <option value="semester1">Học kỳ 1</option>
-                                    <option value="semester2">Học kỳ 2</option>
-                                    <option value="semester3">Học kỳ 3</option>
-                                </select>
-                                <select class="form-control" id="fee-approval-class-filter" style="width: 180px;" onchange="onFeeApprovalClassChange()">
-                                    <option value="">-- Chọn lớp --</option>
-                                    <option value="10A1">10A1</option>
-                                    <option value="10A2">10A2</option>
-                                    <option value="11A1">11A1</option>
-                                    <option value="11A2">11A2</option>
-                                    <option value="12A1">12A1</option>
-                                    <option value="12A2">12A2</option>
-                                </select>
-                                <select class="form-control" id="fee-approval-status-filter" style="width: 180px;" onchange="filterFeeApprovalList()">
-                                    <option value="">-- Tất cả trạng thái --</option>
-                                    <option value="pending">Chờ duyệt</option>
-                                    <option value="approved">Đã duyệt</option>
-                                    <option value="rejected">Đã từ chối</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>STT</th>
-                                        <th>Mã học sinh</th>
-                                        <th>Tên học sinh</th>
-                                        <th>Lớp</th>
-                                        <th>Kỳ học</th>
-                                        <th>Đợt thanh toán</th>
-                                        <th>Số tiền</th>
-                                        <th>Trạng thái</th>
-                                        <th>Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fee-approval-table-body">
-                                    <tr>
-                                        <td colspan="9" style="text-align: center; padding: 40px; color: #505050; font-size: 14px;">
-                                            Vui lòng chọn kỳ học và lớp ở trên để hiển thị danh sách phí cần duyệt
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Fee Approval Detail Modal -->
-                    <div class="modal" id="fee-approval-detail-modal">
-                        <div class="modal-content modal-large">
-                            <div class="modal-header">
-                                <h3>Chi tiết phí cần duyệt</h3>
-                                <button class="modal-close" onclick="closeModal('fee-approval-detail-modal')">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="detail-view">
-                                    <div class="detail-section">
-                                        <h4 class="detail-section-title">Thông tin học sinh</h4>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Mã học sinh:</div>
-                                            <div class="detail-value" id="fee-approval-detail-student-code">STU001</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Tên học sinh:</div>
-                                            <div class="detail-value" id="fee-approval-detail-student-name">Nguyễn Văn A</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Lớp:</div>
-                                            <div class="detail-value" id="fee-approval-detail-class">10A1</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="detail-section">
-                                        <h4 class="detail-section-title">Thông tin thanh toán</h4>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Kỳ học:</div>
-                                            <div class="detail-value" id="fee-approval-detail-semester">Học kỳ 1</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Đợt thanh toán:</div>
-                                            <div class="detail-value" id="fee-approval-detail-period">First Semester Payment</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Mã đợt thanh toán:</div>
-                                            <div class="detail-value" id="fee-approval-detail-period-code">PP001</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Ngày tạo:</div>
-                                            <div class="detail-value" id="fee-approval-detail-date">15/01/2024</div>
-                                        </div>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Trạng thái:</div>
-                                            <div class="detail-value" id="fee-approval-detail-status">
-                                                <span class="badge badge-warning">Chờ duyệt</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="detail-section">
-                                        <h4 class="detail-section-title">Danh sách các khoản phí</h4>
-                                        <div class="detail-table-container">
-                                            <table class="detail-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>STT</th>
-                                                        <th>Tên khoản phí</th>
-                                                        <th>Số tiền</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="fee-approval-detail-fee-items">
-                                                    <tr>
-                                                        <td>1</td>
-                                                        <td>Tuition Fee</td>
-                                                        <td>500,000 MMK</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>2</td>
-                                                        <td>Library Fee</td>
-                                                        <td>50,000 MMK</td>
-                                                    </tr>
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr>
-                                                        <td colspan="2" style="text-align: right; font-weight: bold;">Tổng tiền:</td>
-                                                        <td style="font-weight: bold;" id="fee-approval-detail-total">550,000 MMK</td>
-                                                    </tr>
-                                                </tfoot>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    <div class="detail-section">
-                                        <h4 class="detail-section-title">Ghi chú</h4>
-                                        <div class="detail-row">
-                                            <div class="detail-label">Ghi chú:</div>
-                                            <div class="detail-value" id="fee-approval-detail-note">Học sinh đã nộp đầy đủ các khoản phí theo đợt thanh toán</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="button" class="btn btn-secondary" onclick="closeModal('fee-approval-detail-modal')">Đóng</button>
-                                    <button type="button" class="btn btn-danger" id="fee-approval-reject-btn" onclick="rejectFeeFromDetail()">Từ chối</button>
-                                    <button type="button" class="btn btn-primary" id="fee-approval-approve-btn" onclick="approveFeeFromDetail()">Duyệt</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>

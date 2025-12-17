@@ -281,14 +281,20 @@ function findFeeConfigRecordByKey(key) {
 
 function ensureFeeConfigRecordForKey(key) {
     let cfg = findFeeConfigRecordByKey(key);
-    if (cfg) return cfg;
+    if (cfg) {
+        // Backward-compat for older objects
+        if (typeof cfg.rejectReason === 'undefined') cfg.rejectReason = '';
+        if (typeof cfg.resubmitNote === 'undefined') cfg.resubmitNote = '';
+        return cfg;
+    }
     cfg = {
         id: feeConfigNextId++,
         semester: key.semester,
         periodCode: key.periodCode,
         classCode: key.classCode,
         status: 'Đang soạn',
-        rejectReason: ''
+        rejectReason: '',
+        resubmitNote: ''
     };
     feeConfigData.unshift(cfg);
     return cfg;
@@ -299,8 +305,12 @@ function renderStudentFeeConfigStatusUI() {
     const saveBtn = document.getElementById('student-fee-config-save-btn');
     const approveBtn = document.getElementById('student-fee-config-approve-btn');
     const rejectBtn = document.getElementById('student-fee-config-reject-btn');
-    const reasonBox = document.getElementById('student-fee-config-reject-reason-box');
+    const feedbackBox = document.getElementById('student-fee-config-feedback-box');
+    const feedbackInner = document.getElementById('student-fee-config-feedback-inner');
     const reasonText = document.getElementById('student-fee-config-reject-reason-text');
+    const resubmitRow = document.getElementById('student-fee-config-resubmit-row');
+    const resubmitText = document.getElementById('student-fee-config-resubmit-text');
+    const needsRevise = document.getElementById('student-fee-config-needs-revise');
 
     const key = getCurrentStudentFeeConfigKey();
     if (!key) {
@@ -308,7 +318,7 @@ function renderStudentFeeConfigStatusUI() {
         if (saveBtn) saveBtn.disabled = true;
         if (approveBtn) approveBtn.style.display = 'none';
         if (rejectBtn) rejectBtn.style.display = 'none';
-        if (reasonBox) reasonBox.style.display = 'none';
+        if (feedbackBox) feedbackBox.style.display = 'none';
         return;
     }
 
@@ -320,7 +330,9 @@ function renderStudentFeeConfigStatusUI() {
     // Default states
     if (approveBtn) approveBtn.style.display = 'none';
     if (rejectBtn) rejectBtn.style.display = 'none';
-    if (reasonBox) reasonBox.style.display = 'none';
+    if (feedbackBox) feedbackBox.style.display = 'none';
+    if (resubmitRow) resubmitRow.style.display = 'none';
+    if (needsRevise) needsRevise.style.display = 'none';
 
     if (status === 'Đang soạn') {
         if (saveBtn) saveBtn.disabled = false;
@@ -328,12 +340,25 @@ function renderStudentFeeConfigStatusUI() {
         if (saveBtn) saveBtn.disabled = true;
         if (approveBtn) approveBtn.style.display = 'inline-flex';
         if (rejectBtn) rejectBtn.style.display = 'inline-flex';
+
+        // Nếu đây là bản gửi lại sau khi bị từ chối: hiển thị lý do + lời xác nhận
+        if (cfg.rejectReason) {
+            if (feedbackBox) feedbackBox.style.display = 'block';
+            if (feedbackInner) feedbackInner.style.background = '#FFF8E1';
+            if (reasonText) reasonText.textContent = ` ${cfg.rejectReason}`;
+            if (cfg.resubmitNote) {
+                if (resubmitRow) resubmitRow.style.display = 'block';
+                if (resubmitText) resubmitText.textContent = ` ${cfg.resubmitNote}`;
+            }
+        }
     } else if (status === 'Xác nhận') {
         if (saveBtn) saveBtn.disabled = true;
     } else if (status === 'Từ chối') {
         if (saveBtn) saveBtn.disabled = false; // cho biên soạn lại rồi gửi lại
-        if (reasonBox) reasonBox.style.display = 'block';
+        if (feedbackBox) feedbackBox.style.display = 'block';
+        if (feedbackInner) feedbackInner.style.background = '#FFF6F6';
         if (reasonText) reasonText.textContent = cfg.rejectReason ? ` ${cfg.rejectReason}` : ' (không có)';
+        if (needsRevise) needsRevise.style.display = 'block';
     } else {
         if (saveBtn) saveBtn.disabled = false;
     }
@@ -349,6 +374,7 @@ function approveStudentFeeConfig() {
     }
     cfg.status = 'Xác nhận';
     cfg.rejectReason = '';
+    cfg.resubmitNote = '';
     loadFeeConfigTable();
     renderStudentFeeConfigStatusUI();
     alert('Đã chấp nhận cấu hình.');
@@ -383,10 +409,37 @@ function submitRejectStudentFeeConfig() {
     }
     cfg.status = 'Từ chối';
     cfg.rejectReason = reason;
+    cfg.resubmitNote = '';
     closeModal('student-fee-config-reject-modal');
     loadFeeConfigTable();
     renderStudentFeeConfigStatusUI();
     alert('Đã từ chối cấu hình.');
+}
+
+function openResubmitStudentFeeConfigModal() {
+    const key = getCurrentStudentFeeConfigKey();
+    if (!key) return;
+    const cfg = ensureFeeConfigRecordForKey(key);
+    if (cfg.status !== 'Từ chối') {
+        alert('Chỉ dùng "Gửi lại duyệt" khi trạng thái là "Từ chối".');
+        return;
+    }
+    const input = document.getElementById('student-fee-config-resubmit-note-input');
+    if (input) input.value = '';
+    showModal('student-fee-config-resubmit-modal');
+}
+
+function submitResubmitStudentFeeConfig() {
+    const noteInput = document.getElementById('student-fee-config-resubmit-note-input');
+    const note = noteInput ? noteInput.value.trim() : '';
+    if (!note) {
+        alert('Vui lòng nhập lời xác nhận đã chỉnh sửa.');
+        return;
+    }
+
+    // Gọi lại luồng lưu nhưng kèm lời xác nhận
+    saveStudentFeeConfig({ resubmitNote: note, fromModal: true });
+    closeModal('student-fee-config-resubmit-modal');
 }
 
 // Grade Point functions
@@ -1498,7 +1551,7 @@ function loadStudentFeeConfigTable() {
 
 
 // Save student fee config
-function saveStudentFeeConfig() {
+function saveStudentFeeConfig(options = {}) {
     const key = getCurrentStudentFeeConfigKey();
     if (!key) {
         alert('Vui lòng chọn kỳ học, đợt thanh toán và lớp trước.');
@@ -1512,6 +1565,11 @@ function saveStudentFeeConfig() {
     }
     if (cfg.status === 'Xác nhận') {
         alert('Cấu hình đã được xác nhận. Không thể sửa đổi.');
+        return;
+    }
+    if (cfg.status === 'Từ chối' && !options.fromModal) {
+        // Bị từ chối -> yêu cầu xác nhận đã chỉnh sửa trước khi gửi lại
+        openResubmitStudentFeeConfigModal();
         return;
     }
 
@@ -1550,14 +1608,24 @@ function saveStudentFeeConfig() {
         students
     };
 
-    // Move status: Đang soạn/Từ chối -> Chờ xác nhận
+    // Move status: Đang soạn -> Chờ xác nhận
+    // Nếu đang Từ chối và đã xác nhận chỉnh sửa -> Chờ xác nhận, giữ lại lý do từ chối + lưu lời xác nhận
     cfg.status = 'Chờ xác nhận';
-    cfg.rejectReason = '';
+    if (options.resubmitNote) {
+        cfg.resubmitNote = options.resubmitNote;
+    } else {
+        cfg.rejectReason = '';
+        cfg.resubmitNote = '';
+    }
 
     loadFeeConfigTable();
     renderStudentFeeConfigStatusUI();
 
-    alert('Đã lưu cấu hình. Trạng thái chuyển sang "Chờ xác nhận".');
+    if (options.resubmitNote) {
+        alert('Đã ghi nhận chỉnh sửa và gửi lại. Trạng thái chuyển sang "Chờ xác nhận".');
+    } else {
+        alert('Đã lưu cấu hình. Trạng thái chuyển sang "Chờ xác nhận".');
+    }
 }
 
 // Load students based on selected class
